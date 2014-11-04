@@ -1,0 +1,5 @@
+*.a
+*.dylib
+*.so
+*.pro.user
+.qmake.stash
