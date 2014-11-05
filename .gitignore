@@ -1,5 +1,8 @@
+*.o
 *.a
 *.dylib
 *.so
 *.pro.user
+moc_*
 .qmake.stash
+Makefile

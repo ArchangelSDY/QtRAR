@@ -4,15 +4,11 @@ TARGET = QtRAR
 TEMPLATE = lib
 
 DEFINES += QTRAR_LIBRARY
+CONFIG(staticlib): DEFINES += QTRAR_STATIC
 
 QMAKE_MAC_SDK = macosx10.9
 
-CONFIG += ordered
-SUBDIRS = unrar
-
-LIBS += -L$$PWD/unrar -lunrar
-
-include(qtrar.pri)
+include(src.pri)
 
 unix {
     target.path = /usr/lib

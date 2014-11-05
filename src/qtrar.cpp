@@ -22,6 +22,7 @@ private:
     QtRAR::OpenMode m_mode;
     int m_error;
     QString m_arcName;
+    QByteArray m_arcNameEncoded;
     Qt::HANDLE m_hArc;
     RAROpenArchiveData m_dArc;
 
@@ -44,9 +45,10 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
     m_arcName(arcName) ,
+    m_arcNameEncoded(m_arcName.toUtf8()) ,
     m_hasScaned(false)
 {
-    m_dArc.ArcName = arcName.toUtf8().data();
+    m_dArc.ArcName = m_arcNameEncoded.data();
     m_dArc.CmtBuf = new char[QtRAR::MAX_COMMENT_SIZE];
     m_dArc.CmtBufSize = QtRAR::MAX_COMMENT_SIZE;
 }
@@ -173,7 +175,8 @@ void QtRAR::setArchiveName(const QString &arcName)
     }
 
     m_p->m_arcName = arcName;
-    m_p->m_dArc.ArcName = arcName.toUtf8().data();
+    m_p->m_arcNameEncoded = arcName.toUtf8();
+    m_p->m_dArc.ArcName = m_p->m_arcNameEncoded.data();
 }
 
 QString QtRAR::comment() const
@@ -200,9 +203,11 @@ bool QtRAR::goToFirstFile()
         return false;
     }
 
-    // Reopen to reset the cursor
+    // Reopen to reset the cursor.
+    // Save mode first because mode will be reset after close().
+    OpenMode lastOpenMode = m_p->m_mode;
     close();
-    return open(m_p->m_mode);
+    return open(lastOpenMode);
 }
 
 bool QtRAR::goToNextFile()
@@ -212,7 +217,12 @@ bool QtRAR::goToNextFile()
     }
 
     m_p->m_error = RARProcessFile(m_p->m_hArc, RAR_SKIP, NULL, NULL);
-    return m_p->m_error == ERAR_SUCCESS;
+    if (m_p->m_error != ERAR_SUCCESS) {
+        return false;
+    } else {
+        RARHeaderData hData;
+        return RARReadHeader(m_p->m_hArc, &hData) == ERAR_SUCCESS;
+    }
 }
 
 bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
