@@ -38,12 +38,8 @@ public:
     QString comment() const;
     int entriesCount() const;
 
-    bool goToFirstFile();
-    bool goToNextFile();
     bool setCurrentFile(const QString &fileName,
                         Qt::CaseSensitivity cs = Qt::CaseSensitive);
-
-    bool hasCurrentFile() const;
 
     bool currentFileInfo(QtRARFileInfo *info) const;
     QString currentFileName() const;

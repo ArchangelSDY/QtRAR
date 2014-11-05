@@ -25,4 +25,7 @@ void TestQtRAR::entriesCount_data()
     QTest::newRow("single file archive")
         << "single.rar"
         << 1;
+    QTest::newRow("multiple files archive")
+        << "multiple.rar"
+        << 2;
 }

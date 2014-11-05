@@ -16,6 +16,7 @@ public:
     inline ~QtRARPrivate();
 
 private:
+    bool reopen();
     void scanFileInfo();
 
     QtRAR *m_q;
@@ -28,13 +29,17 @@ private:
 
     bool m_hasScaned;
     QList<QtRARFileInfo> m_fileInfoList;
+    QHash<QString, int> m_fileNameToIndexSensitive;
+    QHash<QString, int> m_fileNameToIndexInsensitive;
+    int m_curIndex;
 };
 
 QtRARPrivate::QtRARPrivate(QtRAR *q) :
     m_q(q) ,
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
-    m_hasScaned(false)
+    m_hasScaned(false) ,
+    m_curIndex(0)
 {
     m_dArc.CmtBuf = new char[QtRAR::MAX_COMMENT_SIZE];
     m_dArc.CmtBufSize = QtRAR::MAX_COMMENT_SIZE;
@@ -46,7 +51,8 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
     m_error(ERAR_SUCCESS) ,
     m_arcName(arcName) ,
     m_arcNameEncoded(m_arcName.toUtf8()) ,
-    m_hasScaned(false)
+    m_hasScaned(false) ,
+    m_curIndex(0)
 {
     m_dArc.ArcName = m_arcNameEncoded.data();
     m_dArc.CmtBuf = new char[QtRAR::MAX_COMMENT_SIZE];
@@ -58,45 +64,53 @@ QtRARPrivate::~QtRARPrivate()
     delete m_dArc.CmtBuf;
 }
 
+bool QtRARPrivate::reopen()
+{
+    QtRAR::OpenMode lastOpenMode = m_mode;
+    m_q->close();
+    return m_q->open(lastOpenMode);
+}
+
 void QtRARPrivate::scanFileInfo()
 {
-    // FIXME: after scan, current changed
-
-    if (!m_q->isOpen()) {
+    if (!m_q->isOpen() || m_hasScaned) {
         return;
     }
 
     m_fileInfoList.clear();
 
-    QtRARFileInfo curInfo;
-    if (!m_q->currentFileInfo(&curInfo)) {
-        return;
-    }
+    RARHeaderData hData;
+    int i = 0;
+    while (RARReadHeader(m_hArc, &hData) == ERAR_SUCCESS) {
+        QtRARFileInfo info;
 
-    QtRARFileInfo info;
+        info.fileName = QString::fromUtf8(hData.FileName);
+        info.arcName = m_arcName;
+        info.flags = hData.Flags;
+        info.packSize = hData.PackSize;
+        info.unpSize = hData.UnpSize;
+        info.hostOS = hData.HostOS;
+        info.fileCRC = hData.FileCRC;
+        info.fileTime = hData.FileTime;
+        info.unpVer = hData.UnpVer;
+        info.method = hData.Method;
+        info.fileAttr = hData.FileAttr;
+        info.comment = QString::fromUtf8(m_dArc.CmtBuf, m_dArc.CmtSize);
 
-    // To the end
-    while (m_q->goToNextFile()) {
-        if (m_q->currentFileInfo(&info)) {
-            m_fileInfoList << info;
+        m_fileInfoList << info;
+        m_fileNameToIndexSensitive.insert(info.fileName, i);
+        m_fileNameToIndexInsensitive.insert(info.fileName.toLower(), i);
+        i++;
+
+        if (RARProcessFile(m_hArc, RAR_SKIP, NULL, NULL) != ERAR_SUCCESS) {
+            break;
         }
-    }
-
-    // From the beginning
-    if (!m_q->goToFirstFile()) {
-        return;
-    }
-
-    do {
-        if (m_q->currentFileInfo(&info)) {
-            m_fileInfoList << info;
-            if (info.fileName == curInfo.fileName) {
-                break;
-            }
-        }
-    } while (m_q->goToNextFile());
+    };
 
     m_hasScaned = true;
+
+    // Reopen to reset cursor
+    reopen();
 }
 
 
@@ -128,10 +142,13 @@ bool QtRAR::open(OpenMode mode)
 
     m_p->m_hArc = RAROpenArchive(&(m_p->m_dArc));
     m_p->m_error = m_p->m_dArc.OpenResult;
+    m_p->m_curIndex = 0;
 
     bool isSuccess = (m_p->m_error == ERAR_SUCCESS);
     if (isSuccess) {
         m_p->m_mode = mode;
+
+        m_p->scanFileInfo();
     } else {
         m_p->m_mode = OpenModeNotOpen;
     }
@@ -144,6 +161,7 @@ void QtRAR::close()
     if (isOpen()) {
         RARCloseArchive(m_p->m_hArc);
         m_p->m_mode = OpenModeNotOpen;
+        m_p->m_curIndex = 0;
     }
 }
 
@@ -190,39 +208,7 @@ QString QtRAR::comment() const
 
 int QtRAR::entriesCount() const
 {
-    if (!m_p->m_hasScaned) {
-        m_p->scanFileInfo();
-    }
-
     return m_p->m_fileInfoList.count();
-}
-
-bool QtRAR::goToFirstFile()
-{
-    if (!isOpen()) {
-        return false;
-    }
-
-    // Reopen to reset the cursor.
-    // Save mode first because mode will be reset after close().
-    OpenMode lastOpenMode = m_p->m_mode;
-    close();
-    return open(lastOpenMode);
-}
-
-bool QtRAR::goToNextFile()
-{
-    if (!isOpen()) {
-        return false;
-    }
-
-    m_p->m_error = RARProcessFile(m_p->m_hArc, RAR_SKIP, NULL, NULL);
-    if (m_p->m_error != ERAR_SUCCESS) {
-        return false;
-    } else {
-        RARHeaderData hData;
-        return RARReadHeader(m_p->m_hArc, &hData) == ERAR_SUCCESS;
-    }
 }
 
 bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
@@ -231,46 +217,22 @@ bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
         return false;
     }
 
-    QHash<QString, bool> searched;
-    QtRARFileInfo info;
-    while (currentFileInfo(&info)) {
-        if (info.fileName.compare(fileName, cs) == 0) {
-            return true;
-        } else {
-            searched.insert(fileName, true);
-            if (!goToNextFile()) {
-                break;
-            }
+    QHash<QString, int>::const_iterator it;
+    if (cs == Qt::CaseSensitive) {
+        it = m_p->m_fileNameToIndexSensitive.find(fileName);
+        if (it == m_p->m_fileNameToIndexSensitive.end()) {
+            return false;
+        }
+    } else {
+        it = m_p->m_fileNameToIndexInsensitive.find(fileName.toLower());
+        if (it == m_p->m_fileNameToIndexInsensitive.end()) {
+            return false;
         }
     }
 
-    // Not found until the end. Go to first and search again.
-    if (goToFirstFile()) {
-        while (currentFileInfo(&info)) {
-            if (info.fileName.compare(fileName, cs) == 0) {
-                return true;
-            } else if (searched.contains(info.fileName)) {
-                // Already checked starting from this
-                return false;
-            } else {
-                if (!goToNextFile()) {
-                    return false;
-                }
-            }
-        }
-    }
+    m_p->m_curIndex = it.value();
 
-    return false;
-}
-
-bool QtRAR::hasCurrentFile() const
-{
-    if (!isOpen()) {
-        return false;
-    }
-
-    RARHeaderData hData;
-    return RARReadHeader(m_p->m_hArc, &hData) == ERAR_SUCCESS;
+    return true;
 }
 
 bool QtRAR::currentFileInfo(QtRARFileInfo *info) const
@@ -279,27 +241,8 @@ bool QtRAR::currentFileInfo(QtRARFileInfo *info) const
         return false;
     }
 
-    RARHeaderData hData;
-    int err = RARReadHeader(m_p->m_hArc, &hData);
-
-    if (err == ERAR_SUCCESS) {
-        info->fileName = QString::fromUtf8(hData.FileName);
-        info->arcName = m_p->m_arcName;
-        info->flags = hData.Flags;
-        info->packSize = hData.PackSize;
-        info->unpSize = hData.UnpSize;
-        info->hostOS = hData.HostOS;
-        info->fileCRC = hData.FileCRC;
-        info->fileTime = hData.FileTime;
-        info->unpVer = hData.UnpVer;
-        info->method = hData.Method;
-        info->fileAttr = hData.FileAttr;
-        info->comment = QString::fromUtf8(m_p->m_dArc.CmtBuf,
-                                          m_p->m_dArc.CmtSize);
-        return true;
-    } else {
-        return false;
-    }
+   *info = m_p->m_fileInfoList[m_p->m_curIndex];
+    return true;
 }
 
 QString QtRAR::currentFileName() const
@@ -308,21 +251,11 @@ QString QtRAR::currentFileName() const
         return QString();
     }
 
-    RARHeaderData hData;
-    int err = RARReadHeader(m_p->m_hArc, &hData);
-    if (err == ERAR_SUCCESS) {
-        return QString::fromUtf8(hData.FileName);
-    } else {
-        return QString();
-    }
+    return m_p->m_fileInfoList[m_p->m_curIndex].fileName;
 }
 
 QStringList QtRAR::fileNameList() const
 {
-    if (!m_p->m_hasScaned) {
-        m_p->scanFileInfo();
-    }
-
     QStringList list;
     foreach (const QtRARFileInfo &info, m_p->m_fileInfoList) {
         list << info.fileName;
@@ -332,9 +265,5 @@ QStringList QtRAR::fileNameList() const
 
 QList<QtRARFileInfo> QtRAR::fileInfoList() const
 {
-    if (!m_p->m_hasScaned) {
-        m_p->scanFileInfo();
-    }
-
     return m_p->m_fileInfoList;
 }
