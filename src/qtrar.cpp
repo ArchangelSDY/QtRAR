@@ -269,7 +269,7 @@ QStringList QtRAR::fileNameList() const
     return list;
 }
 
-QList<QtRARFileInfo> QtRAR::fileInfoList() const
+QList<QtRARFileInfo> &QtRAR::fileInfoList() const
 {
     return m_p->m_fileInfoList;
 }

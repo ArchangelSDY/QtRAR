@@ -45,7 +45,7 @@ public:
     QString currentFileName() const;
 
     QStringList fileNameList() const;
-    QList<QtRARFileInfo> fileInfoList() const;
+    QList<QtRARFileInfo> &fileInfoList() const;
 
     // TODO: auto close？
 

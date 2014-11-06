@@ -350,3 +350,35 @@ void TestQtRAR::fileNameList_data()
         << "multiple-with-utf8.rar"
         << (QStringList() << "qt2.txt" << "qt.txt" << "中文.txt");
 }
+
+void TestQtRAR::fileInfoList()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QStringList, fileNameList);
+
+    QtRAR rar(arcName);
+    rar.open(QtRAR::OpenModeList);
+
+    QList<QtRARFileInfo> &infoList = rar.fileInfoList();
+    QStringList actFileNameList;
+    foreach (const QtRARFileInfo &info, infoList) {
+        actFileNameList << info.fileName;
+    }
+    QCOMPARE(actFileNameList, fileNameList);
+}
+
+void TestQtRAR::fileInfoList_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QStringList>("fileNameList");
+
+    QTest::newRow("single file archive")
+        << "single.rar"
+        << (QStringList() << "qt.txt");
+    QTest::newRow("multiple files archive")
+        << "multiple.rar"
+        << (QStringList() << "qt2.txt" << "qt.txt");
+    QTest::newRow("multiple files(with utf8 file names) archive")
+        << "multiple-with-utf8.rar"
+        << (QStringList() << "qt2.txt" << "qt.txt" << "中文.txt");
+}
