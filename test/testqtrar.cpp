@@ -314,6 +314,14 @@ void TestQtRAR::setCurrentFile_data()
         << 13u
         << 4u
         << QByteArray("54BBE476").toUInt(0, 16);
+    QTest::newRow("UTF-8 file name")
+        << "multiple-with-utf8.rar"
+        << "中文.txt"
+        << Qt::CaseSensitive
+        << true
+        << 18u
+        << 7u
+        << QByteArray("8A30AA71").toUInt(0, 16);
 }
 
 void TestQtRAR::fileNameList()
