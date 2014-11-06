@@ -1,4 +1,4 @@
-LIBS += -L$$PWD/unrar -lunrar
+LIBS += -L$$OUT_PWD/unrar -lunrar
 
 SOURCES += \
     $$PWD/qtrar.cpp \

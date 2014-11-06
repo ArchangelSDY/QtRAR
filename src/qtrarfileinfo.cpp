@@ -1,2 +1,2 @@
-#include "QtRARFileInfo.h"
+#include "qtrarfileinfo.h"
 
