@@ -187,6 +187,11 @@ QString QtRAR::archiveName() const
 
 void QtRAR::setArchiveName(const QString &arcName)
 {
+    if (isOpen()) {
+        qWarning("QtRAR::setArchiveName: Archive is open now! Close it first.");
+        return;
+    }
+
     if (arcName != m_p->m_arcName) {
         m_p->m_fileInfoList.clear();
         m_p->m_hasScaned = false;

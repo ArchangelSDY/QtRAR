@@ -13,6 +13,8 @@ private slots:
     void error_data();
     void archiveName();
     void archiveName_data();
+    void setArchiveName();
+    void setArchiveName_data();
     void entriesCount();
     void entriesCount_data();
 };

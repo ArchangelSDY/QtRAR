@@ -96,6 +96,68 @@ void TestQtRAR::archiveName_data()
         << "中文.rar";
 }
 
+void TestQtRAR::setArchiveName()
+{
+    QFETCH(QString, oldArc);
+    QFETCH(bool, oldIsOpen);
+    QFETCH(int, oldEntriesCount);
+    QFETCH(QString, newArc);
+    QFETCH(bool, newIsOpen);
+    QFETCH(int, newEntriesCount);
+
+    QtRAR *rar;
+    if (oldArc.isNull()) {
+        rar = new QtRAR();
+    } else {
+        rar = new QtRAR(oldArc);
+    }
+
+    rar->open(QtRAR::OpenModeList);
+    QCOMPARE(rar->isOpen(), oldIsOpen);
+    QCOMPARE(rar->entriesCount(), oldEntriesCount);
+    QCOMPARE(rar->error() == 0, oldIsOpen);
+
+    rar->close();
+    QCOMPARE(rar->isOpen(), false);
+
+    rar->setArchiveName(newArc);
+    rar->open(QtRAR::OpenModeList);
+    QCOMPARE(rar->isOpen(), newIsOpen);
+    QCOMPARE(rar->entriesCount(), newEntriesCount);
+    QCOMPARE(rar->error() == 0, newIsOpen);
+
+    delete rar;
+}
+
+void TestQtRAR::setArchiveName_data()
+{
+    QTest::addColumn<QString>("oldArc");
+    QTest::addColumn<bool>("oldIsOpen");
+    QTest::addColumn<int>("oldEntriesCount");
+    QTest::addColumn<QString>("newArc");
+    QTest::addColumn<bool>("newIsOpen");
+    QTest::addColumn<int>("newEntriesCount");
+
+    QTest::newRow("single -> multiple")
+        << "single.rar" << true << 1
+        << "multiple.rar" << true << 2;
+    QTest::newRow("multiple -> single")
+        << "multiple.rar" << true << 2
+        << "single.rar" << true << 1;
+    QTest::newRow("null -> mulitple")
+        << QString() << false << 0
+        << "multiple.rar" << true << 2;
+    QTest::newRow("multiple -> null")
+        << "multiple.rar" << true << 2
+        << QString() << false << 0;
+    QTest::newRow("not found -> multiple")
+        << "notfound.rar" << false << 0
+        << "multiple.rar" << true << 2;
+    QTest::newRow("multiple -> not found")
+        << "multiple.rar" << true << 2
+        << "notfound.rar" << false << 0;
+}
+
 void TestQtRAR::entriesCount()
 {
     QFETCH(QString, arcName);
