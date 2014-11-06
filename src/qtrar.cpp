@@ -208,7 +208,8 @@ QString QtRAR::comment() const
         return QString();
     }
 
-    return QString::fromUtf8(m_p->m_dArc.CmtBuf, m_p->m_dArc.CmtSize);
+    // Comment buffer ends with '\0'
+    return QString::fromUtf8(m_p->m_dArc.CmtBuf, m_p->m_dArc.CmtSize - 1);
 }
 
 int QtRAR::entriesCount() const

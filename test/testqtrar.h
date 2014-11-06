@@ -17,6 +17,8 @@ private slots:
     void setArchiveName_data();
     void entriesCount();
     void entriesCount_data();
+    void comment();
+    void comment_data();
 };
 
 #endif // TESTQTRAR_H

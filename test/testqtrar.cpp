@@ -185,3 +185,26 @@ void TestQtRAR::entriesCount_data()
         << "中文.rar"
         << 1;
 }
+
+void TestQtRAR::comment()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QString, comment);
+
+    QtRAR rar(arcName);
+    rar.open(QtRAR::OpenModeList);
+    QCOMPARE(rar.comment(), comment);
+}
+
+void TestQtRAR::comment_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QString>("comment");
+
+    QTest::newRow("regular comment")
+        << "comment.rar"
+        << "QtRAR";
+    QTest::newRow("UTF-8 comment")
+        << "comment-utf8.rar"
+        << "中文";
+}
