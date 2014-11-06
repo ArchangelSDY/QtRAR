@@ -2,6 +2,7 @@
 #include <QFile>
 
 #include "../src/qtrar.h"
+#include "../src/qtrarfileinfo.h"
 
 #include "testqtrar.h"
 
@@ -207,4 +208,44 @@ void TestQtRAR::comment_data()
     QTest::newRow("UTF-8 comment")
         << "comment-utf8.rar"
         << "中文";
+}
+
+void TestQtRAR::currentFileInfo()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QString, fileName);
+    QFETCH(unsigned int, packSize);
+    QFETCH(unsigned int, unpSize);
+    QFETCH(unsigned int, checksum);
+
+    QtRAR rar(arcName);
+    rar.open(QtRAR::OpenModeList);
+    QtRARFileInfo info;
+    QVERIFY2(rar.currentFileInfo(&info), "cannot get current file info");
+    QCOMPARE(info.fileName, fileName);
+    QCOMPARE(info.packSize, packSize);
+    QCOMPARE(info.unpSize, unpSize);
+    QCOMPARE(info.fileCRC, checksum);
+}
+
+void TestQtRAR::currentFileInfo_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<unsigned int>("packSize");
+    QTest::addColumn<unsigned int>("unpSize");
+    QTest::addColumn<unsigned int>("checksum");
+
+    QTest::newRow("single file archive")
+        << "single.rar"
+        << "qt.txt"
+        << 13u
+        << 4u
+        << QByteArray("54BBE476").toUInt(0, 16);
+    QTest::newRow("multiple file archive")
+        << "multiple.rar"
+        << "qt2.txt"
+        << 15u
+        << 5u
+        << QByteArray("9C7AD585").toUInt(0, 16);
 }

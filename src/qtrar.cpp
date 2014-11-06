@@ -95,7 +95,7 @@ void QtRARPrivate::scanFileInfo()
         info.unpVer = hData.UnpVer;
         info.method = hData.Method;
         info.fileAttr = hData.FileAttr;
-        info.comment = QString::fromUtf8(m_dArc.CmtBuf, m_dArc.CmtSize);
+        info.comment = m_q->comment();
 
         m_fileInfoList << info;
         m_fileNameToIndexSensitive.insert(info.fileName, i);
