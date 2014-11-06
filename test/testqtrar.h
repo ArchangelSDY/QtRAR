@@ -21,6 +21,8 @@ private slots:
     void comment_data();
     void currentFileInfo();
     void currentFileInfo_data();
+    void setCurrentFile();
+    void setCurrentFile_data();
 };
 
 #endif // TESTQTRAR_H

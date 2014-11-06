@@ -7,6 +7,7 @@
 #include "testqtrar.h"
 
 Q_DECLARE_METATYPE(QtRAR::OpenMode)
+Q_DECLARE_METATYPE(Qt::CaseSensitivity)
 
 void TestQtRAR::openClose()
 {
@@ -248,4 +249,69 @@ void TestQtRAR::currentFileInfo_data()
         << 15u
         << 5u
         << QByteArray("9C7AD585").toUInt(0, 16);
+}
+
+void TestQtRAR::setCurrentFile()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QString, fileName);
+    QFETCH(Qt::CaseSensitivity, caseSensitive);
+    QFETCH(bool, setCurrentFileSuccess);
+    QFETCH(unsigned int, packSize);
+    QFETCH(unsigned int, unpSize);
+    QFETCH(unsigned int, checksum);
+
+    QtRAR rar(arcName);
+    rar.open(QtRAR::OpenModeList);
+
+    QCOMPARE(rar.setCurrentFile(fileName, caseSensitive),
+             setCurrentFileSuccess);
+
+    if (setCurrentFileSuccess) {
+        QCOMPARE(rar.currentFileName().compare(fileName, caseSensitive), 0);
+
+        QtRARFileInfo info;
+        QVERIFY2(rar.currentFileInfo(&info), "cannot get current file info");
+
+        QCOMPARE(info.fileName.compare(fileName, caseSensitive), 0);
+        QCOMPARE(info.packSize, packSize);
+        QCOMPARE(info.unpSize, unpSize);
+        QCOMPARE(info.fileCRC, checksum);
+    }
+}
+
+void TestQtRAR::setCurrentFile_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<Qt::CaseSensitivity>("caseSensitive");
+    QTest::addColumn<bool>("setCurrentFileSuccess");
+    QTest::addColumn<unsigned int>("packSize");
+    QTest::addColumn<unsigned int>("unpSize");
+    QTest::addColumn<unsigned int>("checksum");
+
+    QTest::newRow("multiple file archive")
+        << "multiple.rar"
+        << "qt.txt"
+        << Qt::CaseSensitive
+        << true
+        << 13u
+        << 4u
+        << QByteArray("54BBE476").toUInt(0, 16);
+    QTest::newRow("correct file name - case insensitive")
+        << "multiple.rar"
+        << "QT.TXT"
+        << Qt::CaseInsensitive
+        << true
+        << 13u
+        << 4u
+        << QByteArray("54BBE476").toUInt(0, 16);
+    QTest::newRow("incorrect file name - case insensitive")
+        << "multiple.rar"
+        << "QT.TXT"
+        << Qt::CaseSensitive
+        << false
+        << 13u
+        << 4u
+        << QByteArray("54BBE476").toUInt(0, 16);
 }
