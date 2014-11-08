@@ -163,6 +163,7 @@ void QtRARFile::setArchiveName(const QString &arcName)
         delete m_p->m_rar;
     }
 
+    m_p->m_buffer.buffer().clear();
     m_p->m_rar = new QtRAR(arcName);
     m_p->m_isRARInternal = true;
 }
@@ -178,8 +179,21 @@ void QtRARFile::setArchive(QtRAR *rar)
         delete m_p->m_rar;
     }
 
+    m_p->m_buffer.buffer().clear();
     m_p->m_rar = rar;
     m_p->m_isRARInternal = false;
+}
+
+void QtRARFile::setFileName(const QString &fileName,
+                            Qt::CaseSensitivity caseSensitivity)
+{
+    if (isOpen()) {
+        qWarning() << "QtRARFile::setArchive: fail because current archive is opened";
+        return;
+    }
+
+    m_p->m_fileName = fileName;
+    m_p->m_caseSensitivity = caseSensitivity;
 }
 
 bool QtRARFile::open(OpenMode mode)

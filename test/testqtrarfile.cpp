@@ -1,11 +1,24 @@
 #include <QTest>
 
+#include "../src/qtrar.h"
 #include "../src/qtrarfile.h"
 #include "../src/qtrarfileinfo.h"
 
 #include "testqtrarfile.h"
 
 Q_DECLARE_METATYPE(Qt::CaseSensitivity)
+
+void TestQtRARFile::initTestCase()
+{
+    m_rar = new QtRAR("multiple.rar");
+    m_rar->open(QtRAR::OpenModeExtract);
+}
+
+void TestQtRARFile::cleanupTestCase()
+{
+    delete m_rar;
+    m_rar = 0;
+}
 
 void TestQtRARFile::openAndRead()
 {
@@ -102,4 +115,71 @@ void TestQtRARFile::openAndRead_data()
         << QByteArray("中文\n")
         << Q_INT64_C(7)
         << Q_INT64_C(18);
+}
+
+void TestQtRARFile::constructor()
+{
+    QFETCH(QtRARFile *, f);
+    QFETCH(bool, isOpen);
+    QFETCH(bool, isRARInternal);
+    QFETCH(QByteArray, content);
+
+    QCOMPARE(f->open(QIODevice::ReadOnly), isOpen);
+    QCOMPARE(f->isOpen(), isOpen);
+    QCOMPARE(f->rar() == 0, isRARInternal);
+
+    if (f->isOpen()) {
+        QCOMPARE(f->readAll(), content);
+    }
+
+    f->close();
+}
+
+void TestQtRARFile::constructor_data()
+{
+    QTest::addColumn<QtRARFile *>("f");
+    QTest::addColumn<bool>("isOpen");
+    QTest::addColumn<bool>("isRARInternal");
+    QTest::addColumn<QByteArray>("content");
+
+    QtRARFile *fInitWithAllNull = new QtRARFile(this);
+    fInitWithAllNull->setArchiveName("multiple.rar");
+    fInitWithAllNull->setFileName("qt.txt");
+    QTest::newRow("init with all null")
+        << fInitWithAllNull
+        << true
+        << true
+        << QByteArray("rar\n");
+
+    QtRARFile *fInitWithArcNameOnly = new QtRARFile("multiple.rar", this);
+    fInitWithArcNameOnly->setFileName("QT.txt", Qt::CaseInsensitive);
+    QTest::newRow("init with only archive name")
+        << fInitWithArcNameOnly
+        << true
+        << true
+        << QByteArray("rar\n");
+
+    QtRARFile *fInitWithRAR = new QtRARFile(m_rar, this);
+    fInitWithRAR->setFileName("qt.txt");
+    QTest::newRow("init with rar given")
+        << fInitWithRAR
+        << true
+        << false
+        << QByteArray("rar\n");
+
+    QTest::newRow("cannot open: empty archive name")
+        << new QtRARFile(this)
+        << false
+        << true
+        << QByteArray();
+    QTest::newRow("cannot open: empty file name")
+        << new QtRARFile("multiple.rar", this)
+        << false
+        << true
+        << QByteArray();
+    QTest::newRow("cannot open: rar given but file name empty")
+        << new QtRARFile(m_rar, this)
+        << false
+        << false
+        << QByteArray();
 }

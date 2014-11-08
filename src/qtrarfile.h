@@ -30,6 +30,8 @@ public:
 
     void setArchiveName(const QString &arcName);
     void setArchive(QtRAR *rar);
+    void setFileName(const QString &fileName,
+                     Qt::CaseSensitivity caseSensitivity=Qt::CaseSensitive);
 
     virtual bool open(OpenMode mode);
     bool open(OpenMode mode, const char *password);
