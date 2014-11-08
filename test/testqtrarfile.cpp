@@ -183,3 +183,86 @@ void TestQtRARFile::constructor_data()
         << false
         << QByteArray();
 }
+
+void TestQtRARFile::change()
+{
+    QFETCH(QString, oldArc);
+    QFETCH(QString, oldFileName);
+    QFETCH(bool, oldIsOpen);
+    QFETCH(QByteArray, oldContent);
+    QFETCH(QString, newArc);
+    QFETCH(QString, newFileName);
+    QFETCH(bool, newIsOpen);
+    QFETCH(QByteArray, newContent);
+
+    QtRARFile f(oldArc, oldFileName);
+    QCOMPARE(f.open(QIODevice::ReadOnly), oldIsOpen);
+    QCOMPARE(f.isOpen(), oldIsOpen);
+
+    if (f.isOpen()) {
+        QCOMPARE(f.readAll(), oldContent);
+    }
+    QCOMPARE(f.pos(), oldContent.size());
+
+    f.close();
+
+    f.setArchiveName(newArc);
+    f.setFileName(newFileName);
+    QCOMPARE(f.open(QIODevice::ReadOnly), newIsOpen);
+    QCOMPARE(f.isOpen(), newIsOpen);
+    QCOMPARE(f.pos(), 0);
+
+    if (f.isOpen()) {
+        QCOMPARE(f.readAll(), newContent);
+        QCOMPARE(f.pos(), newContent.size());
+    }
+}
+
+void TestQtRARFile::change_data()
+{
+    QTest::addColumn<QString>("oldArc");
+    QTest::addColumn<QString>("oldFileName");
+    QTest::addColumn<bool>("oldIsOpen");
+    QTest::addColumn<QByteArray>("oldContent");
+    QTest::addColumn<QString>("newArc");
+    QTest::addColumn<QString>("newFileName");
+    QTest::addColumn<bool>("newIsOpen");
+    QTest::addColumn<QByteArray>("newContent");
+
+    QTest::newRow("same archive, file name change")
+        << "multiple.rar"
+        << "qt.txt"
+        << true
+        << QByteArray("rar\n")
+        << "multiple.rar"
+        << "qt2.txt"
+        << true
+        << QByteArray("rar2\n");
+    QTest::newRow("different archive")
+        << "multiple.rar"
+        << "qt2.txt"
+        << true
+        << QByteArray("rar2\n")
+        << "single.rar"
+        << "qt.txt"
+        << true
+        << QByteArray("rar\n");
+    QTest::newRow("found -> not found")
+        << "multiple.rar"
+        << "qt.txt"
+        << true
+        << QByteArray("rar\n")
+        << "single.rar"
+        << "QT.txt"
+        << false
+        << QByteArray();
+    QTest::newRow("not found -> found")
+        << "multiple.rar"
+        << "QT.txt"
+        << false
+        << QByteArray("")
+        << "single.rar"
+        << "qt.txt"
+        << true
+        << QByteArray("rar\n");
+}

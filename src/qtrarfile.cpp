@@ -22,6 +22,7 @@ public:
 
 private:
     static int procCallback(UINT msg, LPARAM self, LPARAM addr, LPARAM size);
+    void resetBuffer();
 
     QtRARFile *m_q;
     QString m_fileName;
@@ -91,6 +92,12 @@ int QtRARFilePrivate::procCallback(UINT msg, LPARAM rawSelf,
     // Password
 
     return 1;
+}
+
+void QtRARFilePrivate::resetBuffer()
+{
+    m_buffer.buffer().clear();
+    m_buffer.seek(0);
 }
 
 
@@ -163,7 +170,6 @@ void QtRARFile::setArchiveName(const QString &arcName)
         delete m_p->m_rar;
     }
 
-    m_p->m_buffer.buffer().clear();
     m_p->m_rar = new QtRAR(arcName);
     m_p->m_isRARInternal = true;
 }
@@ -179,7 +185,6 @@ void QtRARFile::setArchive(QtRAR *rar)
         delete m_p->m_rar;
     }
 
-    m_p->m_buffer.buffer().clear();
     m_p->m_rar = rar;
     m_p->m_isRARInternal = false;
 }
@@ -257,13 +262,13 @@ bool QtRARFile::open(OpenMode mode, const char *password)
         return false;
     }
 
-    m_p->m_buffer.buffer().clear();
-    m_p->m_buffer.seek(0);
+    m_p->resetBuffer();
     m_p->m_error = RARProcessFile(m_p->m_rar->unrarArcHandle(), RAR_TEST, 0, 0);
     m_p->m_buffer.seek(0);
 
     if (m_p->m_error == ERAR_SUCCESS) {
         setOpenMode(ReadOnly);
+        reset();    // Reset pos
         return true;
     } else {
         setOpenMode(NotOpen);
@@ -312,7 +317,8 @@ void QtRARFile::close()
         return;
     }
 
-    m_p->m_buffer.close();
+    m_p->resetBuffer();
+    setOpenMode(NotOpen);
 }
 
 int QtRARFile::error() const
