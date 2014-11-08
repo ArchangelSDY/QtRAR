@@ -1,8 +1,10 @@
 HEADERS += \
-    testqtrar.h
+    $$PWD/testqtrar.h \
+    $$PWD/testqtrarfile.h
 
 SOURCES += \
-    qtrartest.cpp \
-    testqtrar.cpp
+    $$PWD/qtrartest.cpp \
+    $$PWD/testqtrar.cpp \
+    $$PWD/testqtrarfile.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"

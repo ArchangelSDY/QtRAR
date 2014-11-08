@@ -1,3 +1,4 @@
+#include <QDebug>
 #include <QHash>
 
 #include "unrar/raros.hpp"
@@ -23,9 +24,8 @@ private:
     QtRAR::OpenMode m_mode;
     int m_error;
     QString m_arcName;
-    QByteArray m_arcNameEncoded;
     Qt::HANDLE m_hArc;
-    RAROpenArchiveData m_dArc;
+    QString m_comment;
 
     bool m_hasScaned;
     QList<QtRARFileInfo> m_fileInfoList;
@@ -41,8 +41,6 @@ QtRARPrivate::QtRARPrivate(QtRAR *q) :
     m_hasScaned(false) ,
     m_curIndex(0)
 {
-    m_dArc.CmtBuf = new char[QtRAR::MAX_COMMENT_SIZE];
-    m_dArc.CmtBufSize = QtRAR::MAX_COMMENT_SIZE;
 }
 
 QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
@@ -50,18 +48,13 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
     m_arcName(arcName) ,
-    m_arcNameEncoded(m_arcName.toUtf8()) ,
     m_hasScaned(false) ,
     m_curIndex(0)
 {
-    m_dArc.ArcName = m_arcNameEncoded.data();
-    m_dArc.CmtBuf = new char[QtRAR::MAX_COMMENT_SIZE];
-    m_dArc.CmtBufSize = QtRAR::MAX_COMMENT_SIZE;
 }
 
 QtRARPrivate::~QtRARPrivate()
 {
-    delete m_dArc.CmtBuf;
 }
 
 bool QtRARPrivate::reopen()
@@ -134,14 +127,21 @@ QtRAR::~QtRAR()
 
 bool QtRAR::open(OpenMode mode)
 {
+    RAROpenArchiveData arcData;
+    arcData.ArcName = m_p->m_arcName.toUtf8().data();
+    arcData.CmtBuf = new char[MAX_COMMENT_SIZE];
+    arcData.CmtBufSize = MAX_COMMENT_SIZE;
+
     if (mode == OpenModeList) {
-        m_p->m_dArc.OpenMode = RAR_OM_LIST;
+        arcData.OpenMode = RAR_OM_LIST;
     } else {
-        m_p->m_dArc.OpenMode = RAR_OM_EXTRACT;
+        arcData.OpenMode = RAR_OM_EXTRACT;
     }
 
-    m_p->m_hArc = RAROpenArchive(&(m_p->m_dArc));
-    m_p->m_error = m_p->m_dArc.OpenResult;
+    m_p->m_hArc = RAROpenArchive(&arcData);
+    m_p->m_error = arcData.OpenResult;
+    // Comment buffer ends with '\0'
+    m_p->m_comment = QString::fromUtf8(arcData.CmtBuf, arcData.CmtSize - 1);
     m_p->m_curIndex = 0;
 
     bool isSuccess = (m_p->m_error == ERAR_SUCCESS);
@@ -153,6 +153,7 @@ bool QtRAR::open(OpenMode mode)
         m_p->m_mode = OpenModeNotOpen;
     }
 
+    delete arcData.CmtBuf;
     return isSuccess;
 }
 
@@ -160,6 +161,7 @@ void QtRAR::close()
 {
     if (isOpen()) {
         RARCloseArchive(m_p->m_hArc);
+        m_p->m_hArc = 0;
         m_p->m_mode = OpenModeNotOpen;
         m_p->m_curIndex = 0;
     }
@@ -188,7 +190,7 @@ QString QtRAR::archiveName() const
 void QtRAR::setArchiveName(const QString &arcName)
 {
     if (isOpen()) {
-        qWarning("QtRAR::setArchiveName: Archive is open now! Close it first.");
+        qWarning() << "QtRAR::setArchiveName: Archive is open now! Close it first.";
         return;
     }
 
@@ -198,18 +200,11 @@ void QtRAR::setArchiveName(const QString &arcName)
     }
 
     m_p->m_arcName = arcName;
-    m_p->m_arcNameEncoded = arcName.toUtf8();
-    m_p->m_dArc.ArcName = m_p->m_arcNameEncoded.data();
 }
 
 QString QtRAR::comment() const
 {
-    if (!isOpen()) {
-        return QString();
-    }
-
-    // Comment buffer ends with '\0'
-    return QString::fromUtf8(m_p->m_dArc.CmtBuf, m_p->m_dArc.CmtSize - 1);
+    return m_p->m_comment;
 }
 
 int QtRAR::entriesCount() const
@@ -220,6 +215,12 @@ int QtRAR::entriesCount() const
 bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
 {
     if (!isOpen()) {
+        return false;
+    }
+
+    // Move unrar cursor to this index
+    if (!m_p->reopen()) {
+        qWarning() << "QtRAR::setCurrentFile: fail to reopen to reset cursor";
         return false;
     }
 
@@ -237,6 +238,22 @@ bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
     }
 
     m_p->m_curIndex = it.value();
+
+    for (int i = 0; i < m_p->m_curIndex; ++i) {
+        RARHeaderData hData;
+        if (RARReadHeader(m_p->m_hArc, &hData) == ERAR_SUCCESS) {
+            if (RARProcessFile(m_p->m_hArc, RAR_SKIP, 0, 0) == ERAR_SUCCESS) {
+                continue;
+            } else {
+                qWarning() << "QtRAR::setCurrentFile: fail to skip file at index"
+                           << i;
+            }
+        } else {
+            qWarning() << "QtRAR:setCurrentFile: fail to read head at index"
+                       << i;
+            return false;
+        }
+    }
 
     return true;
 }
@@ -272,4 +289,9 @@ QStringList QtRAR::fileNameList() const
 QList<QtRARFileInfo> &QtRAR::fileInfoList() const
 {
     return m_p->m_fileInfoList;
+}
+
+Qt::HANDLE QtRAR::unrarArcHandle()
+{
+    return m_p->m_hArc;
 }

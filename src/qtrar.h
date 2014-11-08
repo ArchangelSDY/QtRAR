@@ -6,8 +6,9 @@
 
 #include "qtrar_global.h"
 
-class QtRARPrivate;
+class QtRARFile;
 struct QtRARFileInfo;
+class QtRARPrivate;
 
 class QTRARSHARED_EXPORT QtRAR
 {
@@ -47,6 +48,7 @@ public:
     QStringList fileNameList() const;
     QList<QtRARFileInfo> &fileInfoList() const;
 
+    Qt::HANDLE unrarArcHandle();
     // TODO: auto close？
 
 private:

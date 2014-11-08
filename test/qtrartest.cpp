@@ -2,6 +2,7 @@
 #include <QTest>
 
 #include "testqtrar.h"
+#include "testqtrarfile.h"
 
 int main(int argc, char **argv)
 {
@@ -11,6 +12,11 @@ int main(int argc, char **argv)
     {
         TestQtRAR testQtRAR;
         err = qMax(err, QTest::qExec(&testQtRAR, app.arguments()));
+    }
+
+    {
+        TestQtRARFile testQtRARFile;
+        err = qMax(err, QTest::qExec(&testQtRARFile, app.arguments()));
     }
 
     if (err != 0) {
