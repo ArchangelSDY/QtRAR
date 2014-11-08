@@ -18,6 +18,8 @@ private slots:
     void constructor_data();
     void change();
     void change_data();
+    void password();
+    void password_data();
 
 private:
     QtRAR *m_rar;

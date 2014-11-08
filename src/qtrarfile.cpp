@@ -32,6 +32,7 @@ private:
     int m_error;
     QBuffer m_buffer;
     QtRARFileInfo m_info;
+    QByteArray m_password;
 };
 
 QtRARFilePrivate::QtRARFilePrivate(QtRARFile *q) :
@@ -82,14 +83,20 @@ QtRARFilePrivate::~QtRARFilePrivate()
 }
 
 int QtRARFilePrivate::procCallback(UINT msg, LPARAM rawSelf,
-                                   LPARAM addr, LPARAM size)
+                                   LPARAM p1, LPARAM p2)
 {
-    if (msg == UCM_PROCESSDATA) {
-        QtRARFilePrivate *self = reinterpret_cast<QtRARFilePrivate *>(rawSelf);
-        self->m_buffer.write(reinterpret_cast<const char *>(addr), size);
-    }
+    QtRARFilePrivate *self = reinterpret_cast<QtRARFilePrivate *>(rawSelf);
 
-    // Password
+    if (msg == UCM_PROCESSDATA) {
+        const char *data = reinterpret_cast<const char *>(p1);
+        qint64 size = p2;
+        self->m_buffer.write(data, size);
+    } else if (msg == UCM_NEEDPASSWORD) {
+        char *passBuf = reinterpret_cast<char *>(p1);
+        int passBufSize = p2;
+        strncpy(passBuf, self->m_password.data(),
+                qMin(self->m_password.count(), passBufSize));
+    }
 
     return 1;
 }
@@ -208,8 +215,6 @@ bool QtRARFile::open(OpenMode mode)
 
 bool QtRARFile::open(OpenMode mode, const char *password)
 {
-    // TODO: password
-
     if (isOpen()) {
         qWarning() << "QtRARFile::open: already opened";
         return false;
@@ -232,6 +237,10 @@ bool QtRARFile::open(OpenMode mode, const char *password)
             m_p->m_error = m_p->m_rar->error();
             return false;
         }
+    }
+
+    if (password) {
+        m_p->m_password = QByteArray(password);
     }
 
     if (!m_p->m_rar->setCurrentFile(m_p->m_fileName, m_p->m_caseSensitivity)) {

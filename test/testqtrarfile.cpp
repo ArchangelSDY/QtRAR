@@ -266,3 +266,38 @@ void TestQtRARFile::change_data()
         << true
         << QByteArray("rar\n");
 }
+
+void TestQtRARFile::password()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QString, fileName);
+    QFETCH(QByteArray, password);
+    QFETCH(bool, isOpen);
+    QFETCH(QByteArray, content);
+
+    QtRARFile f(arcName, fileName);
+    QCOMPARE(f.open(QIODevice::ReadOnly, password.data()), isOpen);
+    QCOMPARE(f.readAll(), content);
+}
+
+void TestQtRARFile::password_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QByteArray>("password");
+    QTest::addColumn<bool>("isOpen");
+    QTest::addColumn<QByteArray>("content");
+
+    QTest::newRow("valid password")
+        << "password.rar"
+        << "qt.txt"
+        << QByteArray("qt")
+        << true
+        << QByteArray("rar\n");
+    QTest::newRow("invalid password")
+        << "password.rar"
+        << "qt.txt"
+        << QByteArray("tq")
+        << false
+        << QByteArray();
+}

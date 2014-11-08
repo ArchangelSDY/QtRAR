@@ -50,6 +50,7 @@ public:
 
     Qt::HANDLE unrarArcHandle();
     // TODO: auto close？
+    // TODO: password for header
 
 private:
     QtRAR(const QtRAR &that);
