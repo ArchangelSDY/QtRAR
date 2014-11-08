@@ -94,4 +94,12 @@ void TestQtRARFile::openAndRead_data()
         << QByteArray("rar\n")
         << Q_INT64_C(4)
         << Q_INT64_C(13);
+    QTest::newRow("UTF-8 content")
+        << "multiple-with-utf8.rar"
+        << "中文.txt"
+        << Qt::CaseInsensitive
+        << true
+        << QByteArray("中文\n")
+        << Q_INT64_C(7)
+        << Q_INT64_C(18);
 }
