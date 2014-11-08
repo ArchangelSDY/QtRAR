@@ -24,7 +24,6 @@ private:
     static int procCallback(UINT msg, LPARAM self, LPARAM addr, LPARAM size);
 
     QtRARFile *m_q;
-    QString m_arcName;
     QString m_fileName;
     Qt::CaseSensitivity m_caseSensitivity;
     QtRAR *m_rar;
@@ -130,7 +129,7 @@ QtRARFile::~QtRARFile()
 
 QString QtRARFile::arcName() const
 {
-    return m_p->m_arcName;
+    return m_p->m_rar ? m_p->m_rar->archiveName() : QString();
 }
 
 QtRAR *QtRARFile::rar() const
@@ -222,7 +221,10 @@ bool QtRARFile::open(OpenMode mode, const char *password)
         return false;
     }
 
-    m_p->m_rar->currentFileInfo(&(m_p->m_info));
+    if (!m_p->m_rar->currentFileInfo(&(m_p->m_info))) {
+        qWarning() << "QtRARFile::open: fail to get current file info";
+        return false;
+    }
 
     RARSetCallback(m_p->m_rar->unrarArcHandle(),
                    QtRARFilePrivate::procCallback,

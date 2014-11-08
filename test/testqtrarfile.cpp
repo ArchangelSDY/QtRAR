@@ -1,7 +1,7 @@
 #include <QTest>
 
 #include "../src/qtrarfile.h"
-#include "../src/qtrarfileinfo.h";
+#include "../src/qtrarfileinfo.h"
 
 #include "testqtrarfile.h"
 
@@ -20,19 +20,33 @@ void TestQtRARFile::openAndRead()
     QtRARFile f(arcName, fileName, caseSensitivity);
     QCOMPARE(f.open(QtRARFile::ReadOnly), isOpen);
     QCOMPARE(f.openMode(), isOpen ? QIODevice::ReadOnly : QIODevice::NotOpen);
+    QCOMPARE(f.arcName(), arcName);
+    QCOMPARE(f.fileName().compare(fileName, caseSensitivity), 0);
+    QCOMPARE(f.caseSensitivity(), caseSensitivity);
 
     if (isOpen) {
+        QCOMPARE(f.actualFileName().compare(fileName, Qt::CaseInsensitive), 0);
+
         QtRARFileInfo info;
         QVERIFY2(f.fileInfo(&info), "get file info failed");
         QCOMPARE(info.packSize, csize);
         QCOMPARE(info.unpSize, usize);
         QCOMPARE(f.csize(), csize);
         QCOMPARE(f.usize(), usize);
+        QCOMPARE(f.isSequential(), false);
+
+        QCOMPARE(f.bytesAvailable(), usize);
+        QCOMPARE(f.atEnd(), false);
+        QCOMPARE(f.pos(), 0);
 
         QByteArray actualContent = f.readAll();
         QCOMPARE(actualContent, content);
         QCOMPARE(actualContent.size(), f.size());
         QCOMPARE(actualContent.size(), f.usize());
+
+        QCOMPARE(f.bytesAvailable(), 0);
+        QCOMPARE(f.atEnd(), true);
+        QCOMPARE(f.pos(), usize);
     }
 
     f.close();
