@@ -1,3 +1,5 @@
+#include <QImage>
+#include <QImageReader>
 #include <QTest>
 
 #include "../src/qtrar.h"
@@ -46,7 +48,7 @@ void TestQtRARFile::openAndRead()
         QCOMPARE(info.unpSize, usize);
         QCOMPARE(f.csize(), csize);
         QCOMPARE(f.usize(), usize);
-        QCOMPARE(f.isSequential(), false);
+        QCOMPARE(f.isSequential(), true);
 
         QCOMPARE(f.bytesAvailable(), usize);
         QCOMPARE(f.atEnd(), false);
@@ -300,4 +302,35 @@ void TestQtRARFile::password_data()
         << QByteArray("tq")
         << false
         << QByteArray();
+}
+
+void TestQtRARFile::imageInArchive()
+{
+    QFETCH(QString, arcName);
+    QFETCH(QString, fileName);
+    QFETCH(QSize, size);
+
+    QtRARFile f(arcName, fileName);
+    QVERIFY2(f.open(QtRARFile::ReadOnly), "fail to open archive");
+
+    QImageReader reader(&f);
+    QImage image = reader.read();
+    QVERIFY2(!image.isNull(), "image is null");
+    QCOMPARE(image.size(), size);
+}
+
+void TestQtRARFile::imageInArchive_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QSize>("size");
+
+    QTest::newRow("PNG")
+        << "image.rar"
+        << "blank.png"
+        << QSize(5, 5);
+    QTest::newRow("JPG")
+        << "image.rar"
+        << "blank.jpg"
+        << QSize(5, 5);
 }

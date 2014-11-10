@@ -276,9 +276,7 @@ bool QtRARFile::open(OpenMode mode, const char *password)
     m_p->m_buffer.seek(0);
 
     if (m_p->m_error == ERAR_SUCCESS) {
-        setOpenMode(ReadOnly);
-        reset();    // Reset pos
-        return true;
+        return QIODevice::open(ReadOnly);
     } else {
         setOpenMode(NotOpen);
         return false;
@@ -287,7 +285,7 @@ bool QtRARFile::open(OpenMode mode, const char *password)
 
 bool QtRARFile::isSequential() const
 {
-    return m_p->m_buffer.isSequential();
+    return true;
 }
 
 qint64 QtRARFile::pos() const

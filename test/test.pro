@@ -1,5 +1,4 @@
 QT       += testlib
-QT       -= gui
 
 TARGET = qtrartest
 CONFIG   += console

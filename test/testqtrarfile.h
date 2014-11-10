@@ -20,6 +20,8 @@ private slots:
     void change_data();
     void password();
     void password_data();
+    void imageInArchive();
+    void imageInArchive_data();
 
 private:
     QtRAR *m_rar;
