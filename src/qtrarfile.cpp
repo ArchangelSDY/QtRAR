@@ -324,6 +324,10 @@ void QtRARFile::close()
         return;
     }
 
+    if (m_p->m_rar && m_p->m_isRARInternal) {
+        m_p->m_rar->close();
+    }
+
     m_p->resetBuffer();
     setOpenMode(NotOpen);
 }
