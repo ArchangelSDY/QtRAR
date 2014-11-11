@@ -127,8 +127,14 @@ QtRAR::~QtRAR()
 
 bool QtRAR::open(OpenMode mode)
 {
-    RAROpenArchiveData arcData;
-    arcData.ArcName = m_p->m_arcName.toUtf8().data();
+    RAROpenArchiveDataEx arcData;
+    wchar_t arcNameW[MAX_ARC_NAME_SIZE];
+    int arcNameLen = m_p->m_arcName
+            .left(MAX_ARC_NAME_SIZE - 1)
+            .toWCharArray(arcNameW);
+    arcNameW[arcNameLen] = '\0';
+    arcData.ArcNameW = arcNameW;
+    arcData.ArcName = 0;
     arcData.CmtBuf = new char[MAX_COMMENT_SIZE];
     arcData.CmtBufSize = MAX_COMMENT_SIZE;
 
@@ -138,7 +144,7 @@ bool QtRAR::open(OpenMode mode)
         arcData.OpenMode = RAR_OM_EXTRACT;
     }
 
-    m_p->m_hArc = RAROpenArchive(&arcData);
+    m_p->m_hArc = RAROpenArchiveEx(&arcData);
     m_p->m_error = arcData.OpenResult;
     // Comment buffer ends with '\0'
     m_p->m_comment = QString::fromUtf8(arcData.CmtBuf, arcData.CmtSize - 1);
