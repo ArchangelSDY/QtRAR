@@ -1,6 +1,7 @@
 project (QtRAR)
 cmake_minimum_required(VERSION 2.8.11)
 
+find_package(Threads)
 find_package(Qt5Core QUIET)
 
 set(QTCORE_LIBRARIES ${Qt5Core_LIBRARIES})

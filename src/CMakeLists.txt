@@ -71,7 +71,7 @@ set(SRCS ${SRCS} ${MOC_SRCS} ${UNRAR_SRC})
 
 add_library(qtrar ${SRCS})
 set_target_properties(qtrar PROPERTIES VERSION 1.0.0 SOVERSION 1)
-target_link_libraries(qtrar Qt5::Core)
+target_link_libraries(qtrar Qt5::Core ${CMAKE_THREADS_LIBS_INIT})
 
 install(FILES ${PUBLIC_HEADERS} DESTINATION include/qtrar)
 install(TARGETS qtrar LIBRARY DESTINATION ${LIB_DESTINATION} ARCHIVE DESTINATION ${LIB_DESTINATION} RUNTIME DESTINATION ${LIB_DESTINATION})
