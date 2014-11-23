@@ -15,7 +15,7 @@ class QTRARSHARED_EXPORT QtRAR
     friend class QtRARPrivate;
 public:
     static const int MAX_COMMENT_SIZE = 64 * 1024;
-    static const int MAX_ARC_NAME_SIZE = 1024;
+    static const int MAX_ARC_NAME_SIZE = 2048;
 
     enum OpenMode {
         OpenModeNotOpen,
