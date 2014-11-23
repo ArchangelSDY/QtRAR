@@ -279,6 +279,11 @@ void TestQtRARFile::password()
 
     QtRARFile f(arcName, fileName);
     QCOMPARE(f.open(QIODevice::ReadOnly, password.data()), isOpen);
+
+    QtRARFileInfo info;
+    f.fileInfo(&info);
+    QCOMPARE(info.isEncrypted(), true);
+
     QCOMPARE(f.readAll(), content);
 }
 
@@ -302,6 +307,12 @@ void TestQtRARFile::password_data()
         << QByteArray("tq")
         << false
         << QByteArray();
+    QTest::newRow("archive with headers encrypted")
+        << "password-header.rar"
+        << "qt.txt"
+        << QByteArray("qt")
+        << true
+        << QByteArray("rar\n");
 }
 
 void TestQtRARFile::imageInArchive()

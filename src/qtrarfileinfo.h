@@ -19,6 +19,8 @@ struct QTRARSHARED_EXPORT QtRARFileInfo
     unsigned int method;
     unsigned int fileAttr;
     QString comment;
+
+    bool isEncrypted() const;
 };
 
 #endif // QTRARFILEINFO_H

@@ -411,10 +411,10 @@ void TestQtRAR::password_data()
         << "qt"
         << (QStringList() << "qt.txt" << "qt2.txt" << "中文.txt");
     QTest::newRow("archive with data encrypted only")
-        << "password-data.rar"
+        << "password.rar"
         << false
         << "qt"
-        << (QStringList() << "qt.txt" << "qt2.txt" << "中文.txt");
+        << (QStringList() << "qt.txt" << "qt2.txt");
     QTest::newRow("archive opened with incorrect password")
         << "password-header.rar"
         << true

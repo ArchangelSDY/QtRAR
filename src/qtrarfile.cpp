@@ -233,7 +233,7 @@ bool QtRARFile::open(OpenMode mode, const char *password)
     m_p->m_error = ERAR_SUCCESS;
 
     if (!m_p->m_rar->isOpen()) {
-        if (!m_p->m_rar->open(QtRAR::OpenModeExtract)) {
+        if (!m_p->m_rar->open(QtRAR::OpenModeExtract, password)) {
             m_p->m_error = m_p->m_rar->error();
             return false;
         }
