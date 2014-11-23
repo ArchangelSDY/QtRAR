@@ -29,7 +29,7 @@ public:
 
     // TODO codec
 
-    bool open(OpenMode mode);
+    bool open(OpenMode mode, const QString &password = QString());
     void close();
     bool isOpen() const;
     OpenMode mode() const;
@@ -39,6 +39,7 @@ public:
     void setArchiveName(const QString &arcName);
     QString comment() const;
     int entriesCount() const;
+    bool isHeadersEncrypted() const;
 
     bool setCurrentFile(const QString &fileName,
                         Qt::CaseSensitivity cs = Qt::CaseSensitive);
@@ -51,7 +52,6 @@ public:
 
     Qt::HANDLE unrarArcHandle();
     // TODO: auto close？
-    // TODO: password for header
 
 private:
     QtRAR(const QtRAR &that);

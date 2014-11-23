@@ -17,6 +17,7 @@ public:
     inline ~QtRARPrivate();
 
 private:
+    void reset();
     bool reopen();
     void scanFileInfo();
 
@@ -26,6 +27,8 @@ private:
     QString m_arcName;
     Qt::HANDLE m_hArc;
     QString m_comment;
+    bool m_isHeadersEncrypted;
+    QByteArray m_password;
 
     bool m_hasScaned;
     QList<QtRARFileInfo> m_fileInfoList;
@@ -38,6 +41,7 @@ QtRARPrivate::QtRARPrivate(QtRAR *q) :
     m_q(q) ,
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
+    m_isHeadersEncrypted(false) ,
     m_hasScaned(false) ,
     m_curIndex(0)
 {
@@ -48,6 +52,7 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
     m_arcName(arcName) ,
+    m_isHeadersEncrypted(false) ,
     m_hasScaned(false) ,
     m_curIndex(0)
 {
@@ -55,6 +60,18 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
 
 QtRARPrivate::~QtRARPrivate()
 {
+}
+
+void QtRARPrivate::reset()
+{
+    m_fileInfoList.clear();
+    m_hasScaned = false;
+    m_isHeadersEncrypted = false;
+    m_password.clear();
+    m_curIndex = 0;
+    m_error = ERAR_SUCCESS;
+    m_hArc = 0;
+    m_mode = QtRAR::OpenModeNotOpen;
 }
 
 bool QtRARPrivate::reopen()
@@ -125,7 +142,7 @@ QtRAR::~QtRAR()
     delete m_p;
 }
 
-bool QtRAR::open(OpenMode mode)
+bool QtRAR::open(OpenMode mode, const QString &password)
 {
     RAROpenArchiveDataEx arcData;
     wchar_t arcNameW[MAX_ARC_NAME_SIZE];
@@ -137,6 +154,8 @@ bool QtRAR::open(OpenMode mode)
     arcData.ArcName = 0;
     arcData.CmtBuf = new char[MAX_COMMENT_SIZE];
     arcData.CmtBufSize = MAX_COMMENT_SIZE;
+    arcData.Callback = 0;
+    arcData.UserData = 0;
 
     if (mode == OpenModeList) {
         arcData.OpenMode = RAR_OM_LIST;
@@ -148,11 +167,17 @@ bool QtRAR::open(OpenMode mode)
     m_p->m_error = arcData.OpenResult;
     // Comment buffer ends with '\0'
     m_p->m_comment = QString::fromUtf8(arcData.CmtBuf, arcData.CmtSize - 1);
+    m_p->m_isHeadersEncrypted = (arcData.Flags & 0x0080);
     m_p->m_curIndex = 0;
 
     bool isSuccess = (m_p->m_error == ERAR_SUCCESS);
     if (isSuccess) {
         m_p->m_mode = mode;
+
+        if (!password.isEmpty()) {
+            m_p->m_password = password.toUtf8();
+            RARSetPassword(m_p->m_hArc, m_p->m_password.data());
+        }
 
         m_p->scanFileInfo();
     } else {
@@ -201,8 +226,7 @@ void QtRAR::setArchiveName(const QString &arcName)
     }
 
     if (arcName != m_p->m_arcName) {
-        m_p->m_fileInfoList.clear();
-        m_p->m_hasScaned = false;
+        m_p->reset();
     }
 
     m_p->m_arcName = arcName;
@@ -216,6 +240,11 @@ QString QtRAR::comment() const
 int QtRAR::entriesCount() const
 {
     return m_p->m_fileInfoList.count();
+}
+
+bool QtRAR::isHeadersEncrypted() const
+{
+    return m_p->m_isHeadersEncrypted;
 }
 
 bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)

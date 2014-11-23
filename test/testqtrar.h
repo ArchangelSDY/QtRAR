@@ -27,6 +27,8 @@ private slots:
     void fileNameList_data();
     void fileInfoList();
     void fileInfoList_data();
+    void password();
+    void password_data();
 };
 
 #endif // TESTQTRAR_H

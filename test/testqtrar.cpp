@@ -382,3 +382,42 @@ void TestQtRAR::fileInfoList_data()
         << "multiple-with-utf8.rar"
         << (QStringList() << "qt2.txt" << "qt.txt" << "中文.txt");
 }
+
+void TestQtRAR::password()
+{
+    QFETCH(QString, arcName);
+    QFETCH(bool, isHeadersEncrypted);
+    QFETCH(QString, password);
+    QFETCH(QStringList, fileNameList);
+
+    QtRAR rar(arcName);
+    rar.open(QtRAR::OpenModeList, password);
+
+    QVERIFY2(rar.isOpen(), "archive failed to open");
+    QCOMPARE(rar.isHeadersEncrypted(), isHeadersEncrypted);
+    QCOMPARE(rar.fileNameList(), fileNameList);
+}
+
+void TestQtRAR::password_data()
+{
+    QTest::addColumn<QString>("arcName");
+    QTest::addColumn<bool>("isHeadersEncrypted");
+    QTest::addColumn<QString>("password");
+    QTest::addColumn<QStringList>("fileNameList");
+
+    QTest::newRow("archive with headers encrypted")
+        << "password-header.rar"
+        << true
+        << "qt"
+        << (QStringList() << "qt.txt" << "qt2.txt" << "中文.txt");
+    QTest::newRow("archive with data encrypted only")
+        << "password-data.rar"
+        << false
+        << "qt"
+        << (QStringList() << "qt.txt" << "qt2.txt" << "中文.txt");
+    QTest::newRow("archive opened with incorrect password")
+        << "password-header.rar"
+        << true
+        << "incorrect"
+        << (QStringList());
+}
