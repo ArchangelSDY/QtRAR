@@ -65,20 +65,24 @@ QtRARPrivate::~QtRARPrivate()
 void QtRARPrivate::reset()
 {
     m_fileInfoList.clear();
-    m_hasScaned = false;
     m_isHeadersEncrypted = false;
     m_password.clear();
     m_curIndex = 0;
     m_error = ERAR_SUCCESS;
     m_hArc = 0;
     m_mode = QtRAR::OpenModeNotOpen;
+    m_hasScaned = false;
 }
 
 bool QtRARPrivate::reopen()
 {
     QtRAR::OpenMode lastOpenMode = m_mode;
-    m_q->close();
-    return m_q->open(lastOpenMode);
+    RARCloseArchive(m_hArc);
+    m_curIndex = 0;
+    m_error = ERAR_SUCCESS;
+    m_hArc = 0;
+    m_mode = QtRAR::OpenModeNotOpen;
+    return m_q->open(lastOpenMode, m_password);
 }
 
 void QtRARPrivate::scanFileInfo()
@@ -192,9 +196,7 @@ void QtRAR::close()
 {
     if (isOpen()) {
         RARCloseArchive(m_p->m_hArc);
-        m_p->m_hArc = 0;
-        m_p->m_mode = OpenModeNotOpen;
-        m_p->m_curIndex = 0;
+        m_p->reset();
     }
 }
 

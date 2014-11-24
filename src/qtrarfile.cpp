@@ -232,11 +232,14 @@ bool QtRARFile::open(OpenMode mode, const char *password)
 
     m_p->m_error = ERAR_SUCCESS;
 
-    if (!m_p->m_rar->isOpen()) {
-        if (!m_p->m_rar->open(QtRAR::OpenModeExtract, password)) {
-            m_p->m_error = m_p->m_rar->error();
-            return false;
-        }
+    // Close QtRAR first in order to reopen with password if necessary
+    if (m_p->m_rar->isOpen()) {
+        m_p->m_rar->close();
+    }
+
+    if (!m_p->m_rar->open(QtRAR::OpenModeExtract, password)) {
+        m_p->m_error = m_p->m_rar->error();
+        return false;
     }
 
     if (password) {
