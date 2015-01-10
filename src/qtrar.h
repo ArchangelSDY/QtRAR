@@ -40,6 +40,7 @@ public:
     QString comment() const;
     int entriesCount() const;
     bool isHeadersEncrypted() const;
+    bool isFilesEncrypted() const;
 
     bool setCurrentFile(const QString &fileName,
                         Qt::CaseSensitivity cs = Qt::CaseSensitive);

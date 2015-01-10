@@ -28,6 +28,7 @@ private:
     Qt::HANDLE m_hArc;
     QString m_comment;
     bool m_isHeadersEncrypted;
+    bool m_isFilesEncrypted;
     QByteArray m_password;
 
     bool m_hasScaned;
@@ -42,6 +43,7 @@ QtRARPrivate::QtRARPrivate(QtRAR *q) :
     m_mode(QtRAR::OpenModeNotOpen) ,
     m_error(ERAR_SUCCESS) ,
     m_isHeadersEncrypted(false) ,
+    m_isFilesEncrypted(false) ,
     m_hasScaned(false) ,
     m_curIndex(0)
 {
@@ -66,6 +68,7 @@ void QtRARPrivate::reset()
 {
     m_fileInfoList.clear();
     m_isHeadersEncrypted = false;
+    m_isFilesEncrypted = false;
     m_password.clear();
     m_curIndex = 0;
     m_error = ERAR_SUCCESS;
@@ -115,6 +118,10 @@ void QtRARPrivate::scanFileInfo()
         m_fileNameToIndexSensitive.insert(info.fileName, i);
         m_fileNameToIndexInsensitive.insert(info.fileName.toLower(), i);
         i++;
+
+        if (info.flags & 0x04) {
+            m_isFilesEncrypted = true;
+        }
 
         if (RARProcessFile(m_hArc, RAR_SKIP, NULL, NULL) != ERAR_SUCCESS) {
             break;
@@ -247,6 +254,11 @@ int QtRAR::entriesCount() const
 bool QtRAR::isHeadersEncrypted() const
 {
     return m_p->m_isHeadersEncrypted;
+}
+
+bool QtRAR::isFilesEncrypted() const
+{
+    return m_p->m_isFilesEncrypted;
 }
 
 bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
