@@ -1,9 +1,7 @@
 #include <QDebug>
 #include <QHash>
 
-#include "unrar/raros.hpp"
-#include "unrar/dll.hpp"
-#undef HANDLE
+#include "unrar/rar.hpp"
 
 #include "qtrar.h"
 #include "qtrarfileinfo.h"

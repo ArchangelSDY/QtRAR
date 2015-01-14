@@ -1,9 +1,7 @@
 #include <QBuffer>
 #include <QDebug>
 
-#include "unrar/raros.hpp"
-#include "unrar/dll.hpp"
-#undef HANDLE
+#include "unrar/rar.hpp"
 
 #include "qtrar.h"
 #include "qtrarfile.h"
@@ -21,7 +19,7 @@ public:
     ~QtRARFilePrivate();
 
 private:
-    static int procCallback(UINT msg, LPARAM self, LPARAM addr, LPARAM size);
+    static int CALLBACK procCallback(UINT msg, LPARAM self, LPARAM addr, LPARAM size);
     void resetBuffer();
 
     QtRARFile *m_q;

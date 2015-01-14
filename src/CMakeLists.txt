@@ -1,9 +1,13 @@
 add_definitions(
     -D_FILE_OFFSET_BITS=64
     -D_LARGEFILE_SOURCE
-    -DRAR_SMP
     -DRARDLL
+    -DQTRAR_LIBRARY
 )
+
+if (NOT WIN32)
+    add_definition(-DRAR_SMP)
+endif ()
 
 # set all include directories for in and out of source builds
 include_directories(
