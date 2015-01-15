@@ -6,7 +6,7 @@ add_definitions(
 )
 
 if (NOT WIN32)
-    add_definition(-DRAR_SMP)
+    add_definitions(-DRAR_SMP)
 endif ()
 
 # set all include directories for in and out of source builds
