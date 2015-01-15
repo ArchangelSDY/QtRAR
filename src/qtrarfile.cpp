@@ -2,6 +2,8 @@
 #include <QDebug>
 
 #include "unrar/rar.hpp"
+// Avoid conflict name with Qt::HANDLE
+#undef HANDLE
 
 #include "qtrar.h"
 #include "qtrarfile.h"
