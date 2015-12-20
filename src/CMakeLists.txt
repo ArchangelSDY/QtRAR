@@ -16,6 +16,8 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
+set(CMAKE_AUTOMOC ON)
+
 set(UNRAR_SRC
     "unrar/rar.cpp"
     "unrar/strlist.cpp"
@@ -70,8 +72,10 @@ set(UNRAR_SRC
 file(GLOB SRCS "*.cpp")
 file(GLOB PUBLIC_HEADERS "*.h")
 
-qt_wrap_cpp(MOC_SRCS ${PUBLIC_HEADERS})
-set(SRCS ${SRCS} ${MOC_SRCS} ${UNRAR_SRC})
+set(SRCS ${SRCS} ${UNRAR_SRC})
+
+add_library(qtrarobjs STATIC ${SRCS})
+target_link_libraries(qtrarobjs "Qt5::Core" ${CMAKE_THREADS_LIBS_INIT})
 
 add_library(qtrar ${SRCS})
 set_target_properties(qtrar PROPERTIES VERSION 1.0.0 SOVERSION 1)

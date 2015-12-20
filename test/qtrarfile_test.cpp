@@ -6,13 +6,33 @@
 #include "../src/qtrarfile.h"
 #include "../src/qtrarfileinfo.h"
 
-#include "testqtrarfile.h"
+class TestQtRARFile : public QObject
+{
+    Q_OBJECT
+private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
+    void openAndRead();
+    void openAndRead_data();
+    void constructor();
+    void constructor_data();
+    void change();
+    void change_data();
+    void password();
+    void password_data();
+    void imageInArchive();
+    void imageInArchive_data();
+
+private:
+    QtRAR *m_rar;
+};
 
 Q_DECLARE_METATYPE(Qt::CaseSensitivity)
 
 void TestQtRARFile::initTestCase()
 {
-    m_rar = new QtRAR("multiple.rar");
+    m_rar = new QtRAR("assets/multiple.rar");
     m_rar->open(QtRAR::OpenModeExtract);
 }
 
@@ -78,7 +98,7 @@ void TestQtRARFile::openAndRead_data()
     QTest::addColumn<qint64>("csize");
 
     QTest::newRow("first file in archive")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt2.txt"
         << Qt::CaseSensitive
         << true
@@ -86,7 +106,7 @@ void TestQtRARFile::openAndRead_data()
         << Q_INT64_C(5)
         << Q_INT64_C(15);
     QTest::newRow("second file in archive")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt.txt"
         << Qt::CaseSensitive
         << true
@@ -94,7 +114,7 @@ void TestQtRARFile::openAndRead_data()
         << Q_INT64_C(4)
         << Q_INT64_C(13);
     QTest::newRow("file not found")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "QT.txt"
         << Qt::CaseSensitive
         << false
@@ -102,7 +122,7 @@ void TestQtRARFile::openAndRead_data()
         << Q_INT64_C(4)
         << Q_INT64_C(13);
     QTest::newRow("case insensitive")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "QT.txt"
         << Qt::CaseInsensitive
         << true
@@ -110,7 +130,7 @@ void TestQtRARFile::openAndRead_data()
         << Q_INT64_C(4)
         << Q_INT64_C(13);
     QTest::newRow("UTF-8 content")
-        << "multiple-with-utf8.rar"
+        << "assets/multiple-with-utf8.rar"
         << "中文.txt"
         << Qt::CaseInsensitive
         << true
@@ -145,7 +165,7 @@ void TestQtRARFile::constructor_data()
     QTest::addColumn<QByteArray>("content");
 
     QtRARFile *fInitWithAllNull = new QtRARFile(this);
-    fInitWithAllNull->setArchiveName("multiple.rar");
+    fInitWithAllNull->setArchiveName("assets/multiple.rar");
     fInitWithAllNull->setFileName("qt.txt");
     QTest::newRow("init with all null")
         << fInitWithAllNull
@@ -153,7 +173,7 @@ void TestQtRARFile::constructor_data()
         << true
         << QByteArray("rar\n");
 
-    QtRARFile *fInitWithArcNameOnly = new QtRARFile("multiple.rar", this);
+    QtRARFile *fInitWithArcNameOnly = new QtRARFile("assets/multiple.rar", this);
     fInitWithArcNameOnly->setFileName("QT.txt", Qt::CaseInsensitive);
     QTest::newRow("init with only archive name")
         << fInitWithArcNameOnly
@@ -232,38 +252,38 @@ void TestQtRARFile::change_data()
     QTest::addColumn<QByteArray>("newContent");
 
     QTest::newRow("same archive, file name change")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt.txt"
         << true
         << QByteArray("rar\n")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt2.txt"
         << true
         << QByteArray("rar2\n");
     QTest::newRow("different archive")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt2.txt"
         << true
         << QByteArray("rar2\n")
-        << "single.rar"
+        << "assets/single.rar"
         << "qt.txt"
         << true
         << QByteArray("rar\n");
     QTest::newRow("found -> not found")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "qt.txt"
         << true
         << QByteArray("rar\n")
-        << "single.rar"
+        << "assets/single.rar"
         << "QT.txt"
         << false
         << QByteArray();
     QTest::newRow("not found -> found")
-        << "multiple.rar"
+        << "assets/multiple.rar"
         << "QT.txt"
         << false
         << QByteArray("")
-        << "single.rar"
+        << "assets/single.rar"
         << "qt.txt"
         << true
         << QByteArray("rar\n");
@@ -306,21 +326,21 @@ void TestQtRARFile::password_data()
     QTest::addColumn<QByteArray>("content");
 
     QTest::newRow("valid password")
-        << "password.rar"
+        << "assets/password.rar"
         << "qt.txt"
         << QByteArray("qt")
         << true
         << true
         << QByteArray("rar\n");
     QTest::newRow("invalid password")
-        << "password.rar"
+        << "assets/password.rar"
         << "qt.txt"
         << QByteArray("tq")
         << true
         << false
         << QByteArray();
     QTest::newRow("archive with headers encrypted")
-        << "password-header.rar"
+        << "assets/password-header.rar"
         << "qt.txt"
         << QByteArray("qt")
         << false
@@ -350,11 +370,14 @@ void TestQtRARFile::imageInArchive_data()
     QTest::addColumn<QSize>("size");
 
     QTest::newRow("PNG")
-        << "image.rar"
+        << "assets/image.rar"
         << "blank.png"
         << QSize(5, 5);
     QTest::newRow("JPG")
-        << "image.rar"
+        << "assets/image.rar"
         << "blank.jpg"
         << QSize(5, 5);
 }
+
+QTEST_MAIN(TestQtRARFile)
+#include "qtrarfile_test.moc"
