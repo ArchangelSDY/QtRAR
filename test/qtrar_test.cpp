@@ -441,6 +441,11 @@ void TestQtRAR::password_data()
         << false
         << "qt"
         << (QStringList() << "qt.txt" << "qt2.txt");
+    QTest::newRow("archive with UTF-8 password")
+        << "assets/password-utf8.rar"
+        << true
+        << "中文"
+        << (QStringList() << "qt2.txt" << "中文.txt" << "qt.txt");
     QTest::newRow("archive opened with incorrect password")
         << "assets/password-header.rar"
         << true
