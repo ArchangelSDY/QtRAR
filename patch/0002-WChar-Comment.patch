@@ -1,0 +1,60 @@
+ src/unrar/dll.cpp | 11 ++++-------
+ src/unrar/dll.hpp |  4 ++--
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/src/unrar/dll.cpp b/src/unrar/dll.cpp
+index 21b63ff..63c9dd4 100644
+--- a/src/unrar/dll.cpp
++++ b/src/unrar/dll.cpp
+@@ -20,7 +20,7 @@ HANDLE PASCAL RAROpenArchive(struct RAROpenArchiveData *r)
+   memset(&rx,0,sizeof(rx));
+   rx.ArcName=r->ArcName;
+   rx.OpenMode=r->OpenMode;
+-  rx.CmtBuf=r->CmtBuf;
++  rx.CmtBufW=r->CmtBufW;
+   rx.CmtBufSize=r->CmtBufSize;
+   HANDLE hArc=RAROpenArchiveEx(&rx);
+   r->OpenResult=rx.OpenResult;
+@@ -111,17 +111,14 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
+     Array<wchar> CmtDataW;
+     if (r->CmtBufSize!=0 && Data->Arc.GetComment(&CmtDataW))
+     {
+-      Array<char> CmtData(CmtDataW.Size()*4+1);
+-      memset(&CmtData[0],0,CmtData.Size());
+-      WideToChar(&CmtDataW[0],&CmtData[0],CmtData.Size()-1);
+-      size_t Size=strlen(&CmtData[0])+1;
++      wcsncpy(r->CmtBufW, CmtDataW.Addr(0), CmtDataW.Size());
++      size_t Size = CmtDataW.Size() + 1;
+ 
+       r->Flags|=2;
+       r->CmtState=Size>r->CmtBufSize ? ERAR_SMALL_BUF:1;
+       r->CmtSize=(uint)Min(Size,r->CmtBufSize);
+-      memcpy(r->CmtBuf,&CmtData[0],r->CmtSize-1);
+       if (Size<=r->CmtBufSize)
+-        r->CmtBuf[r->CmtSize-1]=0;
++        r->CmtBufW[r->CmtSize-1]=0;
+     }
+     else
+       r->CmtState=r->CmtSize=0;
+diff --git a/src/unrar/dll.hpp b/src/unrar/dll.hpp
+index 57a073d..efc432b 100644
+--- a/src/unrar/dll.hpp
++++ b/src/unrar/dll.hpp
+@@ -107,7 +107,7 @@ struct RAROpenArchiveData
+   char         *ArcName;
+   unsigned int OpenMode;
+   unsigned int OpenResult;
+-  char         *CmtBuf;
++  wchar_t      *CmtBufW;
+   unsigned int CmtBufSize;
+   unsigned int CmtSize;
+   unsigned int CmtState;
+@@ -121,7 +121,7 @@ struct RAROpenArchiveDataEx
+   wchar_t      *ArcNameW;
+   unsigned int  OpenMode;
+   unsigned int  OpenResult;
+-  char         *CmtBuf;
++  wchar_t      *CmtBufW;
+   unsigned int  CmtBufSize;
+   unsigned int  CmtSize;
+   unsigned int  CmtState;
