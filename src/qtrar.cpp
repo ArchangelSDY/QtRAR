@@ -67,6 +67,7 @@ QtRARPrivate::~QtRARPrivate()
 void QtRARPrivate::reset()
 {
     m_fileInfoList.clear();
+    m_comment.clear();
     m_isHeadersEncrypted = false;
     m_isFilesEncrypted = false;
     m_password.clear();
@@ -163,7 +164,7 @@ bool QtRAR::open(OpenMode mode, const QString &password)
     arcNameW[arcNameLen] = '\0';
     arcData.ArcNameW = arcNameW;
     arcData.ArcName = 0;
-    arcData.CmtBuf = new char[MAX_COMMENT_SIZE];
+    arcData.CmtBufW = new wchar[MAX_COMMENT_SIZE];
     arcData.CmtBufSize = MAX_COMMENT_SIZE;
     arcData.Callback = 0;
     arcData.UserData = 0;
@@ -176,14 +177,20 @@ bool QtRAR::open(OpenMode mode, const QString &password)
 
     m_p->m_hArc = RAROpenArchiveEx(&arcData);
     m_p->m_error = arcData.OpenResult;
-    // Comment buffer ends with '\0'
-    m_p->m_comment = QString::fromUtf8(arcData.CmtBuf, arcData.CmtSize - 1);
-    m_p->m_isHeadersEncrypted = (arcData.Flags & 0x0080);
     m_p->m_curIndex = 0;
+    m_p->m_comment.clear();
 
     bool isSuccess = (m_p->m_error == ERAR_SUCCESS);
     if (isSuccess) {
         m_p->m_mode = mode;
+
+        if (arcData.CmtSize > 0) {
+            // Comment buffer ends with '\0'
+            std::wstring cstr(arcData.CmtBufW, arcData.CmtSize - 1);
+            m_p->m_comment = QString::fromStdWString(cstr);
+        }
+
+        m_p->m_isHeadersEncrypted = (arcData.Flags & 0x0080);
 
         if (!password.isEmpty()) {
             m_p->m_password = password;
@@ -196,7 +203,7 @@ bool QtRAR::open(OpenMode mode, const QString &password)
         m_p->m_mode = OpenModeNotOpen;
     }
 
-    delete arcData.CmtBuf;
+    delete arcData.CmtBufW;
     return isSuccess;
 }
 

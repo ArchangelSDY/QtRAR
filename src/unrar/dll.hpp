@@ -107,7 +107,7 @@ struct RAROpenArchiveData
   char         *ArcName;
   unsigned int OpenMode;
   unsigned int OpenResult;
-  char         *CmtBuf;
+  wchar_t      *CmtBufW;
   unsigned int CmtBufSize;
   unsigned int CmtSize;
   unsigned int CmtState;
@@ -121,7 +121,7 @@ struct RAROpenArchiveDataEx
   wchar_t      *ArcNameW;
   unsigned int  OpenMode;
   unsigned int  OpenResult;
-  char         *CmtBuf;
+  wchar_t      *CmtBufW;
   unsigned int  CmtBufSize;
   unsigned int  CmtSize;
   unsigned int  CmtState;
