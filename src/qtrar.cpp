@@ -29,7 +29,7 @@ private:
     QString m_comment;
     bool m_isHeadersEncrypted;
     bool m_isFilesEncrypted;
-    QByteArray m_password;
+    QString m_password;
 
     bool m_hasScaned;
     QList<QtRARFileInfo> m_fileInfoList;
@@ -96,12 +96,12 @@ void QtRARPrivate::scanFileInfo()
 
     m_fileInfoList.clear();
 
-    RARHeaderData hData;
+    RARHeaderDataEx hData;
     int i = 0;
-    while (RARReadHeader(m_hArc, &hData) == ERAR_SUCCESS) {
+    while (RARReadHeaderEx(m_hArc, &hData) == ERAR_SUCCESS) {
         QtRARFileInfo info;
 
-        info.fileName = QString::fromUtf8(hData.FileName);
+        info.fileName = QString::fromWCharArray(hData.FileNameW);
         info.arcName = m_arcName;
         info.flags = hData.Flags;
         info.packSize = hData.PackSize;
@@ -186,8 +186,9 @@ bool QtRAR::open(OpenMode mode, const QString &password)
         m_p->m_mode = mode;
 
         if (!password.isEmpty()) {
-            m_p->m_password = password.toUtf8();
-            RARSetPassword(m_p->m_hArc, m_p->m_password.data());
+            m_p->m_password = password;
+            std::wstring passwordW = m_p->m_password.toStdWString();
+            RARSetPasswordW(m_p->m_hArc, const_cast<wchar *>(passwordW.data()));
         }
 
         m_p->scanFileInfo();
@@ -289,8 +290,8 @@ bool QtRAR::setCurrentFile(const QString &fileName, Qt::CaseSensitivity cs)
     m_p->m_curIndex = it.value();
 
     for (int i = 0; i < m_p->m_curIndex; ++i) {
-        RARHeaderData hData;
-        if (RARReadHeader(m_p->m_hArc, &hData) == ERAR_SUCCESS) {
+        RARHeaderDataEx hData;
+        if (RARReadHeaderEx(m_p->m_hArc, &hData) == ERAR_SUCCESS) {
             if (RARProcessFile(m_p->m_hArc, RAR_SKIP, 0, 0) == ERAR_SUCCESS) {
                 continue;
             } else {

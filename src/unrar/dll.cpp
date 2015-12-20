@@ -419,6 +419,12 @@ void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
   Data->Cmd.Password.Set(PasswordW);
   cleandata(PasswordW,sizeof(PasswordW));
 }
+
+void PASCAL RARSetPasswordW(HANDLE hArcData, wchar *PasswordW)
+{
+    DataSet *Data = (DataSet *)hArcData;
+    Data->Cmd.Password.Set(PasswordW);
+}
 #endif
 
 

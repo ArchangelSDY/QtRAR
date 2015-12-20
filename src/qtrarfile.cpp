@@ -213,7 +213,7 @@ bool QtRARFile::open(OpenMode mode)
     return open(mode, 0);
 }
 
-bool QtRARFile::open(OpenMode mode, const char *password)
+bool QtRARFile::open(OpenMode mode, const QString &password)
 {
     if (isOpen()) {
         qWarning() << "QtRARFile::open: already opened";
@@ -242,9 +242,7 @@ bool QtRARFile::open(OpenMode mode, const char *password)
         return false;
     }
 
-    if (password) {
-        m_p->m_password = QByteArray(password);
-    }
+    m_p->m_password = password.toUtf8();
 
     if (!m_p->m_rar->setCurrentFile(m_p->m_fileName, m_p->m_caseSensitivity)) {
         qWarning() << "QtRARFile::open: fail to set current file to"

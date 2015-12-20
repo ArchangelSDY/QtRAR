@@ -34,7 +34,7 @@ public:
                      Qt::CaseSensitivity caseSensitivity=Qt::CaseSensitive);
 
     virtual bool open(OpenMode mode);
-    bool open(OpenMode mode, const char *password);
+    bool open(OpenMode mode, const QString &password);
     virtual bool isSequential() const;
     virtual qint64 pos() const;
     virtual bool atEnd() const;
