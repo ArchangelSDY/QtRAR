@@ -2,9 +2,9 @@ project (QtRAR)
 cmake_minimum_required(VERSION 2.8.11)
 
 find_package(Threads)
-find_package(Qt5Core QUIET)
-find_package(Qt5Gui QUIET)
-find_package(Qt5Test QUIET)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Test REQUIRED)
 
 set(QTCORE_LIBRARIES ${Qt5Core_LIBRARIES})
 # if there is no QT_ROOT, try to deduce it from Qt QtCore include
