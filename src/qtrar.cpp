@@ -55,6 +55,7 @@ QtRARPrivate::QtRARPrivate(QtRAR *q, const QString &arcName) :
     m_error(ERAR_SUCCESS) ,
     m_arcName(arcName) ,
     m_isHeadersEncrypted(false) ,
+    m_isFilesEncrypted(false) ,
     m_hasScaned(false) ,
     m_curIndex(0)
 {
