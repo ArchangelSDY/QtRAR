@@ -24,7 +24,5 @@ set(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Lib
 
 add_subdirectory(src)
 
-# install(FILES DESTINATION ${CMAKE_ROOT}/Modules)
-
 enable_testing()
 add_subdirectory(test)
