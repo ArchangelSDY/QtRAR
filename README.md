@@ -1,4 +1,4 @@
-# QtRAR
+# QtRAR [![Build status](https://ci.appveyor.com/api/projects/status/v1q5u31ghi4v612e?svg=true)](https://ci.appveyor.com/project/ArchangelSDY/qtrar)
 
 A Qt wrapper of UnRAR library.
 
