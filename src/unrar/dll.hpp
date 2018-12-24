@@ -117,7 +117,7 @@ struct RAROpenArchiveData
   char         *ArcName;
   unsigned int OpenMode;
   unsigned int OpenResult;
-  char         *CmtBuf;
+  wchar_t      *CmtBufW;
   unsigned int CmtBufSize;
   unsigned int CmtSize;
   unsigned int CmtState;
@@ -141,7 +141,7 @@ struct RAROpenArchiveDataEx
   wchar_t      *ArcNameW;
   unsigned int  OpenMode;
   unsigned int  OpenResult;
-  char         *CmtBuf;
+  wchar_t      *CmtBufW;
   unsigned int  CmtBufSize;
   unsigned int  CmtSize;
   unsigned int  CmtState;
@@ -174,6 +174,7 @@ void   PASCAL RARSetCallback(HANDLE hArcData,UNRARCALLBACK Callback,LPARAM UserD
 void   PASCAL RARSetChangeVolProc(HANDLE hArcData,CHANGEVOLPROC ChangeVolProc);
 void   PASCAL RARSetProcessDataProc(HANDLE hArcData,PROCESSDATAPROC ProcessDataProc);
 void   PASCAL RARSetPassword(HANDLE hArcData,char *Password);
+void   PASCAL RARSetPasswordW(HANDLE hArcData,wchar *PasswordW);
 int    PASCAL RARGetDllVersion();
 
 #ifdef __cplusplus

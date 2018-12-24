@@ -20,7 +20,7 @@ HANDLE PASCAL RAROpenArchive(struct RAROpenArchiveData *r)
   memset(&rx,0,sizeof(rx));
   rx.ArcName=r->ArcName;
   rx.OpenMode=r->OpenMode;
-  rx.CmtBuf=r->CmtBuf;
+  rx.CmtBufW=r->CmtBufW;
   rx.CmtBufSize=r->CmtBufSize;
   HANDLE hArc=RAROpenArchiveEx(&rx);
   r->OpenResult=rx.OpenResult;
@@ -113,17 +113,14 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Array<wchar> CmtDataW;
     if (r->CmtBufSize!=0 && Data->Arc.GetComment(&CmtDataW))
     {
-      Array<char> CmtData(CmtDataW.Size()*4+1);
-      memset(&CmtData[0],0,CmtData.Size());
-      WideToChar(&CmtDataW[0],&CmtData[0],CmtData.Size()-1);
-      size_t Size=strlen(&CmtData[0])+1;
+      wcsncpy(r->CmtBufW, CmtDataW.Addr(0), CmtDataW.Size());
+      size_t Size = CmtDataW.Size() + 1;
 
       r->Flags|=2;
       r->CmtState=Size>r->CmtBufSize ? ERAR_SMALL_BUF:1;
       r->CmtSize=(uint)Min(Size,r->CmtBufSize);
-      memcpy(r->CmtBuf,&CmtData[0],r->CmtSize-1);
       if (Size<=r->CmtBufSize)
-        r->CmtBuf[r->CmtSize-1]=0;
+        r->CmtBufW[r->CmtSize-1]=0;
     }
     else
       r->CmtState=r->CmtSize=0;
@@ -444,6 +441,12 @@ void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
   GetWideName(Password,NULL,PasswordW,ASIZE(PasswordW));
   Data->Cmd.Password.Set(PasswordW);
   cleandata(PasswordW,sizeof(PasswordW));
+}
+
+void PASCAL RARSetPasswordW(HANDLE hArcData,wchar *PasswordW)
+{
+    DataSet *Data=(DataSet *)hArcData;
+    Data->Cmd.Password.Set(PasswordW);
 }
 #endif
 
