@@ -30,7 +30,7 @@ foreach(TEST_FILE ${TEST_FILES})
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_TARGET} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     if(WIN32)
-        set_property(TEST ${TEST_NAME} PROPERTY ENVIRONMENT "PATH=%PATH%\;${QT_ROOT}\\bin")
+        set_property(TEST ${TEST_NAME} PROPERTY ENVIRONMENT "PATH=%PATH%\;${QT_ROOT}bin")
     endif(WIN32)
 endforeach(TEST_FILE)
 
@@ -38,5 +38,5 @@ endforeach(TEST_FILE)
 add_custom_command(TARGET qtrar_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/assets
-    $<TARGET_FILE_DIR:qtrar_test>/assets
+    ${CMAKE_CURRENT_BINARY_DIR}/assets
 )

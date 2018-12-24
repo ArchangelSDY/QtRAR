@@ -294,17 +294,13 @@ void TestQtRARFile::password()
     QFETCH(QString, arcName);
     QFETCH(QString, fileName);
     QFETCH(QByteArray, password);
-    QFETCH(bool, canOpenWithoutPassword);
     QFETCH(bool, isOpen);
     QFETCH(QByteArray, content);
 
     QtRARFile f(arcName, fileName);
 
     // First open without password
-    QCOMPARE(f.open(QIODevice::ReadOnly), canOpenWithoutPassword);
-    if (canOpenWithoutPassword) {
-        f.close();
-    }
+    QCOMPARE(f.open(QIODevice::ReadOnly), false);
 
     // Second open with password
     QCOMPARE(f.open(QIODevice::ReadOnly, password.data()), isOpen);
@@ -321,7 +317,6 @@ void TestQtRARFile::password_data()
     QTest::addColumn<QString>("arcName");
     QTest::addColumn<QString>("fileName");
     QTest::addColumn<QByteArray>("password");
-    QTest::addColumn<bool>("canOpenWithoutPassword");
     QTest::addColumn<bool>("isOpen");
     QTest::addColumn<QByteArray>("content");
 
@@ -330,20 +325,17 @@ void TestQtRARFile::password_data()
         << "qt.txt"
         << QByteArray("qt")
         << true
-        << true
         << QByteArray("rar\n");
     QTest::newRow("invalid password")
         << "assets/password.rar"
         << "qt.txt"
         << QByteArray("tq")
-        << true
         << false
         << QByteArray();
     QTest::newRow("archive with headers encrypted")
         << "assets/password-header.rar"
         << "qt.txt"
         << QByteArray("qt")
-        << false
         << true
         << QByteArray("rar\n");
 }

@@ -416,12 +416,24 @@ void TestQtRAR::password()
     QFETCH(QString, password);
     QFETCH(QStringList, fileNameList);
 
-    QtRAR rar(arcName);
-    rar.open(QtRAR::OpenModeList, password);
+    if (!isHeadersEncrypted) {
+        // Can open without password if headers not encrypted
+        QtRAR rar(arcName);
+        QVERIFY2(rar.open(QtRAR::OpenModeList), "archive failed to open");
 
-    QVERIFY2(rar.isOpen(), "archive failed to open");
-    QCOMPARE(rar.isHeadersEncrypted(), isHeadersEncrypted);
-    QCOMPARE(rar.fileNameList(), fileNameList);
+        QVERIFY2(rar.isOpen(), "archive failed to open");
+        QCOMPARE(rar.isHeadersEncrypted(), isHeadersEncrypted);
+        QCOMPARE(rar.fileNameList(), fileNameList);
+    }
+
+    {
+        QtRAR rar(arcName);
+        QVERIFY2(rar.open(QtRAR::OpenModeList, password), "archive failed to open");
+
+        QVERIFY2(rar.isOpen(), "archive failed to open");
+        QCOMPARE(rar.isHeadersEncrypted(), isHeadersEncrypted);
+        QCOMPARE(rar.fileNameList(), fileNameList);
+    }
 }
 
 void TestQtRAR::password_data()
