@@ -20,7 +20,7 @@ HANDLE PASCAL RAROpenArchive(struct RAROpenArchiveData *r)
   memset(&rx,0,sizeof(rx));
   rx.ArcName=r->ArcName;
   rx.OpenMode=r->OpenMode;
-  rx.CmtBufW=r->CmtBufW;
+  rx.CmtBuf=r->CmtBuf;
   rx.CmtBufSize=r->CmtBufSize;
   HANDLE hArc=RAROpenArchiveEx(&rx);
   r->OpenResult=rx.OpenResult;
@@ -35,6 +35,8 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
   DataSet *Data=NULL;
   try
   {
+    ErrHandler.Clean();
+
     r->OpenResult=0;
     Data=new DataSet;
     Data->Cmd.DllError=0;
@@ -74,7 +76,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
       delete Data;
       return NULL;
     }
-    if (!Data->Arc.IsArchive(false))
+    if (!Data->Arc.IsArchive(true))
     {
       if (Data->Cmd.DllError!=0)
         r->OpenResult=Data->Cmd.DllError;
@@ -111,14 +113,17 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Array<wchar> CmtDataW;
     if (r->CmtBufSize!=0 && Data->Arc.GetComment(&CmtDataW))
     {
-      wcsncpy(r->CmtBufW, CmtDataW.Addr(0), CmtDataW.Size());
-      size_t Size = CmtDataW.Size() + 1;
+      Array<char> CmtData(CmtDataW.Size()*4+1);
+      memset(&CmtData[0],0,CmtData.Size());
+      WideToChar(&CmtDataW[0],&CmtData[0],CmtData.Size()-1);
+      size_t Size=strlen(&CmtData[0])+1;
 
       r->Flags|=2;
       r->CmtState=Size>r->CmtBufSize ? ERAR_SMALL_BUF:1;
       r->CmtSize=(uint)Min(Size,r->CmtBufSize);
+      memcpy(r->CmtBuf,&CmtData[0],r->CmtSize-1);
       if (Size<=r->CmtBufSize)
-        r->CmtBufW[r->CmtSize-1]=0;
+        r->CmtBuf[r->CmtSize-1]=0;
     }
     else
       r->CmtState=r->CmtSize=0;
@@ -148,9 +153,16 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
 int PASCAL RARCloseArchive(HANDLE hArcData)
 {
   DataSet *Data=(DataSet *)hArcData;
-  bool Success=Data==NULL ? false:Data->Arc.Close();
-  delete Data;
-  return Success ? ERAR_SUCCESS : ERAR_ECLOSE;
+  try
+  {
+    bool Success=Data==NULL ? false:Data->Arc.Close();
+    delete Data;
+    return Success ? ERAR_SUCCESS : ERAR_ECLOSE;
+  }
+  catch (RAR_EXIT ErrCode)
+  {
+    return Data->Cmd.DllError!=0 ? Data->Cmd.DllError : RarErrorToDll(ErrCode);
+  }
 }
 
 
@@ -241,12 +253,20 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
     D->UnpSize=uint(hd->UnpSize & 0xffffffff);
     D->UnpSizeHigh=uint(hd->UnpSize>>32);
     D->HostOS=hd->HSType==HSYS_WINDOWS ? HOST_WIN32:HOST_UNIX;
-    if (Data->Arc.Format==RARFMT50)
-      D->UnpVer=Data->Arc.FileHead.UnpVer==0 ? 50 : 200; // If it is not 0, just set it to something big.
-    else
-      D->UnpVer=Data->Arc.FileHead.UnpVer;
+    D->UnpVer=Data->Arc.FileHead.UnpVer;
     D->FileCRC=hd->FileHash.CRC32;
     D->FileTime=hd->mtime.GetDos();
+    
+    uint64 MRaw=hd->mtime.GetWin();
+    D->MtimeLow=(uint)MRaw;
+    D->MtimeHigh=(uint)(MRaw>>32);
+    uint64 CRaw=hd->ctime.GetWin();
+    D->CtimeLow=(uint)CRaw;
+    D->CtimeHigh=(uint)(CRaw>>32);
+    uint64 ARaw=hd->atime.GetWin();
+    D->AtimeLow=(uint)ARaw;
+    D->AtimeHigh=(uint)(ARaw>>32);
+
     D->Method=hd->Method+0x30;
     D->FileAttr=hd->FileAttr;
     D->CmtSize=0;
@@ -268,7 +288,16 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
         D->HashType=RAR_HASH_NONE;
         break;
     }
-    
+
+    D->RedirType=hd->RedirType;
+    // RedirNameSize sanity check is useful in case some developer
+    // did not initialize Reserved area with 0 as required in docs.
+    // We have taken 'Redir*' fields from Reserved area. We may remove
+    // this RedirNameSize check sometimes later.
+    if (hd->RedirType!=FSREDIR_NONE && D->RedirName!=NULL &&
+        D->RedirNameSize>0 && D->RedirNameSize<100000)
+      wcsncpyz(D->RedirName,hd->RedirName,D->RedirNameSize);
+    D->DirTarget=hd->DirTarget;
   }
   catch (RAR_EXIT ErrCode)
   {
@@ -375,13 +404,13 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
 
 int PASCAL RARProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestName)
 {
-  return(ProcessFile(hArcData,Operation,DestPath,DestName,NULL,NULL));
+  return ProcessFile(hArcData,Operation,DestPath,DestName,NULL,NULL);
 }
 
 
 int PASCAL RARProcessFileW(HANDLE hArcData,int Operation,wchar *DestPath,wchar *DestName)
 {
-  return(ProcessFile(hArcData,Operation,NULL,NULL,DestPath,DestName));
+  return ProcessFile(hArcData,Operation,NULL,NULL,DestPath,DestName);
 }
 
 
@@ -415,12 +444,6 @@ void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
   GetWideName(Password,NULL,PasswordW,ASIZE(PasswordW));
   Data->Cmd.Password.Set(PasswordW);
   cleandata(PasswordW,sizeof(PasswordW));
-}
-
-void PASCAL RARSetPasswordW(HANDLE hArcData, wchar *PasswordW)
-{
-    DataSet *Data = (DataSet *)hArcData;
-    Data->Cmd.Password.Set(PasswordW);
 }
 #endif
 

@@ -25,7 +25,7 @@ class ErrorHandler
     uint ErrCount;
     bool EnableBreak;
     bool Silent;
-    bool DoShutdown;
+    bool DisableShutdown; // Shutdown is not suitable after last error.
   public:
     ErrorHandler();
     void Clean();
@@ -57,11 +57,14 @@ class ErrorHandler
     void SetSignalHandlers(bool Enable);
     void Throw(RAR_EXIT Code);
     void SetSilent(bool Mode) {Silent=Mode;};
-    void SetShutdown(bool Mode) {DoShutdown=Mode;};
+    bool GetSysErrMsg(wchar *Msg,size_t Size);
     void SysErrMsg();
     int GetSystemErrorCode();
     void SetSystemErrorCode(int Code);
-    bool UserBreak;
+    void SetDisableShutdown() {DisableShutdown=true;}
+    bool IsShutdownEnabled() {return !DisableShutdown;}
+
+    bool UserBreak; // Ctrl+Break is pressed.
     bool MainExit; // main() is completed.
 };
 
