@@ -24,5 +24,7 @@ set(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Lib
 
 add_subdirectory(src)
 
-enable_testing()
-add_subdirectory(test)
+if (NOT DEFINED QTRAR_NO_TEST)
+    enable_testing()
+    add_subdirectory(test)
+endif()
