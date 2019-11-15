@@ -38,7 +38,7 @@ private:
 QtRARFilePrivate::QtRARFilePrivate(QtRARFile *q) :
     m_q(q) ,
     m_caseSensitivity(Qt::CaseSensitive) ,
-    m_rar(0) ,
+    m_rar(nullptr) ,
     m_isRARInternal(true) ,
     m_error(ERAR_SUCCESS)
 {
@@ -148,7 +148,7 @@ QString QtRARFile::arcName() const
 
 QtRAR *QtRARFile::rar() const
 {
-    return m_p->m_isRARInternal ? 0 : m_p->m_rar;
+    return m_p->m_isRARInternal ? nullptr : m_p->m_rar;
 }
 
 QString QtRARFile::fileName() const
@@ -210,7 +210,7 @@ void QtRARFile::setFileName(const QString &fileName,
 
 bool QtRARFile::open(OpenMode mode)
 {
-    return open(mode, 0);
+    return open(mode, nullptr);
 }
 
 bool QtRARFile::open(OpenMode mode, const QString &password)
@@ -225,7 +225,7 @@ bool QtRARFile::open(OpenMode mode, const QString &password)
         return false;
     }
 
-    if (m_p->m_rar == 0) {
+    if (m_p->m_rar == nullptr) {
         qWarning() << "QtRARFile::open: archive is null";
         return false;
     }
@@ -273,7 +273,7 @@ bool QtRARFile::open(OpenMode mode, const QString &password)
     }
 
     m_p->resetBuffer();
-    m_p->m_error = RARProcessFile(m_p->m_rar->unrarArcHandle(), RAR_TEST, 0, 0);
+    m_p->m_error = RARProcessFile(m_p->m_rar->unrarArcHandle(), RAR_TEST, nullptr, nullptr);
     m_p->m_buffer.seek(0);
 
     if (m_p->m_error == ERAR_SUCCESS) {
