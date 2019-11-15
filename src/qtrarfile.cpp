@@ -93,9 +93,9 @@ int QtRARFilePrivate::procCallback(UINT msg, LPARAM rawSelf,
         self->m_buffer.write(data, size);
     } else if (msg == UCM_NEEDPASSWORD) {
         char *passBuf = reinterpret_cast<char *>(p1);
-        int passBufSize = p2;
+        qint64 passBufSize = p2;
         strncpy(passBuf, self->m_password.data(),
-                qMin(self->m_password.count(), passBufSize));
+                size_t(qMin(qint64(self->m_password.count()), passBufSize)));
     }
 
     return 1;
