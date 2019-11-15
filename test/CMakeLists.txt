@@ -26,7 +26,7 @@ foreach(TEST_FILE ${TEST_FILES})
 
     add_executable(${TEST_TARGET} ${TEST_FILE})
     set_target_properties(${TEST_TARGET} PROPERTIES MACOSX_BUNDLE FALSE)
-    target_link_libraries(${TEST_TARGET} qtrarobjs "Qt5::Gui" "Qt5::Test")
+    target_link_libraries(${TEST_TARGET} qtrarobjs "Qt5::Gui" "Qt5::Test" "Threads::Threads")
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_TARGET} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     if(WIN32)
