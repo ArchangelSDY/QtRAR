@@ -2,19 +2,11 @@ project (QtRAR)
 cmake_minimum_required(VERSION 2.8.11)
 
 find_package(Threads)
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Gui REQUIRED)
-find_package(Qt5Test REQUIRED)
-
-set(QTCORE_LIBRARIES ${Qt5Core_LIBRARIES})
-# if there is no QT_ROOT, try to deduce it from Qt QtCore include
-if ("${QT_ROOT}" STREQUAL "")
-    set(QT_ROOT ${Qt5Core_DIR}/../../../)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Core Test Gui REQUIRED)
+if (NOT Qt6_FOUND)
+    find_package(Qt5 5.15 COMPONENTS Core Test Gui REQUIRED)
 endif()
-
-include_directories(${Qt5Core_INCLUDE_DIRS})
-include_directories(${Qt5Gui_INCLUDE_DIRS})
-include_directories(${Qt5Test_INCLUDE_DIRS})
 
 # All build libraries are moved to this directory
 SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})

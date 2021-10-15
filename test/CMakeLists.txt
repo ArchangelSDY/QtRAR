@@ -26,11 +26,11 @@ foreach(TEST_FILE ${TEST_FILES})
 
     add_executable(${TEST_TARGET} ${TEST_FILE})
     set_target_properties(${TEST_TARGET} PROPERTIES MACOSX_BUNDLE FALSE)
-    target_link_libraries(${TEST_TARGET} qtrarobjs "Qt5::Gui" "Qt5::Test" "Threads::Threads")
+    target_link_libraries(${TEST_TARGET} qtrarobjs Qt::Gui Qt::Test Threads::Threads)
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_TARGET} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     if(WIN32)
-        set_property(TEST ${TEST_NAME} PROPERTY ENVIRONMENT "PATH=%PATH%\;${QT_ROOT}bin")
+        set_property(TEST ${TEST_NAME} PROPERTY ENVIRONMENT "PATH=%PATH%\;$<TARGET_FILE_DIR:Qt${QT_VERSION_MAJOR}::Core>")
     endif(WIN32)
 endforeach(TEST_FILE)
 

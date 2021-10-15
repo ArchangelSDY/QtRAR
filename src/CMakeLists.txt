@@ -75,11 +75,11 @@ file(GLOB PUBLIC_HEADERS "*.h")
 set(SRCS ${SRCS} ${UNRAR_SRC})
 
 add_library(qtrarobjs STATIC ${SRCS})
-target_link_libraries(qtrarobjs "Qt5::Core" ${CMAKE_THREADS_LIBS_INIT})
+target_link_libraries(qtrarobjs Qt::Core ${CMAKE_THREADS_LIBS_INIT})
 
 add_library(qtrar ${SRCS})
 set_target_properties(qtrar PROPERTIES VERSION 1.0.0 SOVERSION 1)
-target_link_libraries(qtrar Qt5::Core ${CMAKE_THREADS_LIBS_INIT})
+target_link_libraries(qtrar Qt::Core ${CMAKE_THREADS_LIBS_INIT})
 
 if(BUILD_SHARED_LIBS)
     install(FILES ${PUBLIC_HEADERS} DESTINATION include/qtrar)
