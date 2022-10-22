@@ -8,6 +8,10 @@ CONFIG(staticlib): DEFINES += QTRAR_STATIC
 
 include(src.pri)
 
+win32 {
+    LIBS += -luser32 -ladvapi32 -lshell32
+}
+
 unix {
     target.path = /usr/lib
     INSTALLS += target
