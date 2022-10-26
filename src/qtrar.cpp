@@ -322,6 +322,10 @@ bool QtRAR::currentFileInfo(QtRARFileInfo *info) const
         return false;
     }
 
+    if (m_p->m_curIndex < 0 || m_p->m_curIndex >= m_p->m_fileInfoList.size()) {
+        return false;
+    }
+
    *info = m_p->m_fileInfoList[m_p->m_curIndex];
     return true;
 }
@@ -329,6 +333,10 @@ bool QtRAR::currentFileInfo(QtRARFileInfo *info) const
 QString QtRAR::currentFileName() const
 {
     if (!isOpen()) {
+        return QString();
+    }
+
+    if (m_p->m_curIndex < 0 || m_p->m_curIndex >= m_p->m_fileInfoList.size()) {
         return QString();
     }
 
