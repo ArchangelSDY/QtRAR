@@ -1,5 +1,5 @@
-project (QtRAR)
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.16)
+project(QtRAR)
 
 find_package(Threads)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
